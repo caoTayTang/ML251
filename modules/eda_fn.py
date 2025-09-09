@@ -42,37 +42,3 @@ def get_missings_percentage(df, columns):
         columns=["%Missing"],
     )
     return df_nulls
-
-
-def detect_outliers(df, col):
-    """
-    Hàm phát hiện ngoại lai trong một cột số bằng phương pháp IQR
-    Args:
-        df (pd.DataFrame): DataFrame chứa dữ liệu
-        col (str): Tên cột số cần kiểm tra ngoại lai
-    Returns:
-        pd.DataFrame: DataFrame chứa các hàng có giá trị ngoại lai trong cột được chỉ định
-    """
-    Q1 = df[col].quantile(0.25)
-    Q3 = df[col].quantile(0.75)
-    IQR = Q3 - Q1
-    lower, upper = Q1 - 1.5 * IQR, Q3 + 1.5 * IQR
-    outliers = df[(df[col] < lower) | (df[col] > upper)]
-    return outliers
-
-
-def clean_outliers(df, col):
-    """
-    Hàm loại bỏ ngoại lai trong một cột số bằng phương pháp IQR
-    Args:
-        df (pd.DataFrame): DataFrame chứa dữ liệu
-        col (str): Tên cột số cần loại bỏ ngoại lai
-    Returns:
-        pd.DataFrame: DataFrame đã loại bỏ các hàng có giá trị ngoại lai trong cột được chỉ định
-    """
-    Q1 = df[col].quantile(0.25)
-    Q3 = df[col].quantile(0.75)
-    IQR = Q3 - Q1
-    lower, upper = Q1 - 1.5 * IQR, Q3 + 1.5 * IQR
-    df_cleaned = df.loc[(df[col] >= lower) & (df[col] <= upper)]
-    return df_cleaned
