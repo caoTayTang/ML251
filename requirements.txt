@@ -1,12 +1,3 @@
-pandas
-matplotlib
-seaborn
-scikit-learn
-xgboost
-numpy
-ipykernel
-
-# Make sure to have CUDA on your machine
-pytorch-tabnet
-torch 
-torchvision
+version https://git-lfs.github.com/spec/v1
+oid sha256:afb2305d95255d6c283bb5cef7acda6c0d86e68752b41f82fbae170e2bd13a65
+size 138
