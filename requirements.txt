@@ -1,0 +1,12 @@
+pandas
+matplotlib
+seaborn
+scikit-learn
+xgboost
+numpy
+ipykernel
+
+# Make sure to have CUDA on your machine
+pytorch-tabnet
+torch 
+torchvision
