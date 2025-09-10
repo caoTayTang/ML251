@@ -20,7 +20,7 @@ Repo này chứa **4 dự án lớn** trong khuôn khổ môn học *Học Máy 
 | **BTL1 – Spaceship Titanic** | Tabular Data (Kaggle Challenge) | ✅ Completed | [Tabular Data](https://caotaytang.github.io/ml251/tabular) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1NNmRjgSI6SE14mwKW55yWsWSvvfLDNwm) |
 | **BTL2 – Text Processing** | NLP / Text Data | 🔜 Upcoming | _TBD_ | ![Colab Badge](https://img.shields.io/badge/Colab-coming--soon-lightgrey?logo=googlecolab&logoColor=white) |
 | **BTL3 – Image Recognition** | Computer Vision | 🔜 Upcoming | _TBD_ | ![Colab Badge](https://img.shields.io/badge/Colab-coming--soon-lightgrey?logo=googlecolab&logoColor=white) |
-| **Extension – Advanced Topics** | (Ensemble / Hybrid / Extra domain) | 🔜 Upcoming | _TBD_ | ![Colab Badge](https://img.shields.io/badge/Colab-coming--soon-lightgrey?logo=googlecolab&logoColor=white) |
+| **Extension – Advanced Topics** | (HMM / Bayesian Network / Conditional Random Field) | 🔜 Upcoming | _TBD_ | ![Colab Badge](https://img.shields.io/badge/Colab-coming--soon-lightgrey?logo=googlecolab&logoColor=white) |
 
 ---
 
