@@ -7,7 +7,7 @@ Lê Chí Đại, Nguyễn Quốc Huy, Phạm Lê Tiến Đạt, Võ Văn Thịnh
 **Course:** CO3117 – Bài tập lớn môn Học Máy (2025)  
 **Instructor:** TS. Lê Thành Sách  
 
-🌐 **Landing Page & Reports:**  🔗 [Landing Pages](https://caotaytang.github.io/ml251/)  
+🌐 **Landing Page & Reports:**  🔗 [Landing Pages](https://caotaytang.github.io/ML-251/)  
 
 ---
 
