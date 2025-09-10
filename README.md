@@ -1,98 +1,62 @@
-# Spaceship Titanic – Dự đoán Vận Chuyển (Transported Prediction)
+# Machine Learning Projects – CO3117 (2025)
 
 **Authors:**  
-Lê Chí Đại, Nguyễn Quốc Huy, Phạm Lê Tiến Đạt, Võ Văn Thịnh (Nhóm ML4U - Đại học Bách Khoa TP.HCM)
+Lê Chí Đại, Nguyễn Quốc Huy, Phạm Lê Tiến Đạt, Võ Văn Thịnh  
+(Nhóm **ML4U** – Đại học Bách Khoa TP.HCM)
 
-**Course:** CO3117 – Bài tập lớn môn Học Máy (2025)
+**Course:** CO3117 – Bài tập lớn môn Học Máy (2025)  
+**Instructor:** TS. Lê Thành Sách  
 
-**🌐 Project Landing Page & Report:**  
-🔗 https://caotaytang.github.io/ML-251/
-
-**▶️ Run in Google Colab:**  
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1NNmRjgSI6SE14mwKW55yWsWSvvfLDNwm#scrollTo=3ji5yAbSGA28)
+🌐 **Landing Page & Reports:**  🔗 [Landing Pages](https://caotaytang.github.io/ml251/)  
 
 ---
 
-## 1. Giới thiệu
+## 🚀 Projects Overview
 
-Dự án giải quyết thử thách **[Spaceship Titanic](https://www.kaggle.com/competitions/spaceship-titanic)** trên Kaggle: dự đoán liệu hành khách có bị **Transported** (dịch chuyển tới chiều khác) sau sự cố trên tàu vũ trụ hay không.  
-Chúng tôi tập trung vào:
+Repo này chứa **4 dự án lớn** trong khuôn khổ môn học *Học Máy – CO3117*:  
+
+| Project | Domain | Status | Landing Page | Colab |
+|---------|--------|--------|------------------|-------|
+| **BTL1 – Spaceship Titanic** | Tabular Data (Kaggle Challenge) | ✅ Completed | [Tabular Data](https://caotaytang.github.io/ml251/tabular) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1NNmRjgSI6SE14mwKW55yWsWSvvfLDNwm) |
+| **BTL2 – Text Processing** | NLP / Text Data | 🔜 Upcoming | _TBD_ | ![Colab Badge](https://img.shields.io/badge/Colab-coming--soon-lightgrey?logo=googlecolab&logoColor=white) |
+| **BTL3 – Image Recognition** | Computer Vision | 🔜 Upcoming | _TBD_ | ![Colab Badge](https://img.shields.io/badge/Colab-coming--soon-lightgrey?logo=googlecolab&logoColor=white) |
+| **Extension – Advanced Topics** | (Ensemble / Hybrid / Extra domain) | 🔜 Upcoming | _TBD_ | ![Colab Badge](https://img.shields.io/badge/Colab-coming--soon-lightgrey?logo=googlecolab&logoColor=white) |
+
+---
+
+## 📊 Nội dung học thuật
+
+Mỗi project được triển khai như một mini-project độc lập, với các bước chính:  
 
 - Phân tích dữ liệu khám phá (EDA)  
-- Feature engineering  
-- Xây dựng các pipeline Học máy truyền thống và Học sâu  
-- So sánh mô hình và đánh giá hiệu năng  
+- Xử lý dữ liệu & Feature Engineering  
+- Xây dựng pipeline Học máy truyền thống và/hoặc Học sâu  
+- Huấn luyện, đánh giá & so sánh mô hình  
+- Viết báo cáo & thảo luận kết quả  
 
 ---
 
-## 2. Dữ liệu & Phân tích Dữ liệu Khám phá (EDA)
+## 📂 Repo Structure
 
-- **Cân bằng lớp mục tiêu:** Tỷ lệ giữa các lớp `Transported` là gần như cân bằng.  
-- **Giá trị thiếu:** Dataset có missing value trên hầu hết các cột (trừ `Transported` và `PassengerId`).  
-
----
-
-## 3. Kỹ thuật Tính năng & Pipelines
-
-### Các tính năng mới (Feature Engineering):
-- Tách `Cabin` thành `Deck`, `Cabin_num`, `Side`.  
-- Phân tách `PassengerId` thành các thành phần hữu ích (`Group`, `Member`).  
-
-### Hai pipeline xử lý:
-1. **Classic ML pipeline:**  
-   - Điền giá trị thiếu bằng `SimpleImputer`
-   - Chuẩn hóa với `StandardScaler`  
-   - Mã hóa với `OneHotEncoder`  
-
-2. **XGBoost pipeline:**  
-   - Giữ nguyên NaN (XGBoost xử lý missing value hiệu quả)  
-   - Chuẩn hóa & mã hóa nhẹ nhàng hơn để tận dụng sức mạnh XGBoost  
+```
+ML251/
+│── data/                       # Bộ dữ liệu (raw)
+│── docs/                       # Tài liệu, hình minh họa, spec
+│── features/                   # Các feature được trích xuất từ data
+│── modules/                    # Các modules, utils tự viết được tái sử dụng
+│── notebooks/      
+│── reports/                    # Báo cáo, kết quả, hình ảnh phân tích
+```
 
 ---
 
-## 4. Huấn luyện Mô hình & Đánh giá
+## ▶️ Usage
 
-Các mô hình thử nghiệm:  
-- Logistic Regression  
-- SVM (RBF)  
-- Decision Tree  
-- Random Forest  
-- Gradient Boosting (XGBoost / LightGBM)  
-- XGBoost (tự xử lý missing value)  
+Clone repo và cài đặt dependencies:
 
-Các chỉ số đánh giá:  
-- Accuracy, Precision, Recall, F1-score (weighted)  
-- Cross-validation (stratified k-fold)  
-
----
-
-## 5. Kết quả & Phân tích
-
-- **XGBoost** là mô hình hiệu suất tốt nhất và ổn định nhất.  
-- **Random Forest**, **SVM** và **Logistic Regression** cũng có hiệu năng gần tương đương.  
-- **Decision Tree** đơn lẻ có hiệu năng thấp hơn rõ rệt so với ensemble.  
-
-### 📊 Hiệu năng mô hình (F1-Score, Accuracy, Precision, Recall)
-
-<p align="center">
-  <img src="doc/experiment.png" alt="So sánh hiệu năng các mô hình" width="600"/>
-</p>
-
-### 📑 Bảng chi tiết kết quả
-
-<p align="center">
-  <img src="doc/detail_score.png" alt="Bảng chi tiết Accuracy, Precision, Recall, F1" width="700"/>
-</p>
-
-
----
-
-## 6. Usage
-
-Clone repo và cài đặt dependency:
 ```bash
-git clone https://github.com/caoTayTang/ML251.git
-cd ML251
+git clone https://github.com/caoTayTang/ml251.git
+cd ml251
 
 # (Tuỳ chọn) tạo môi trường ảo
 python -m venv venv
