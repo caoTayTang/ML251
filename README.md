@@ -40,7 +40,7 @@ Chúng tôi tập trung vào:
 
 ### Hai pipeline xử lý:
 1. **Classic ML pipeline:**  
-   - Điền giá trị thiếu bằng `SimpleImputer` (median cho số, mode cho phân loại)  
+   - Điền giá trị thiếu bằng `SimpleImputer`
    - Chuẩn hóa với `StandardScaler`  
    - Mã hóa với `OneHotEncoder`  
 
@@ -58,10 +58,10 @@ Các mô hình thử nghiệm:
 - Decision Tree  
 - Random Forest  
 - Gradient Boosting (XGBoost / LightGBM)  
-- XGBoost (ưu tiên xử lý NaN)  
+- XGBoost (tự xử lý missing value)  
 
 Các chỉ số đánh giá:  
-- Accuracy, Precision, Recall, F1-score (có trọng số)  
+- Accuracy, Precision, Recall, F1-score (weighted)  
 - Cross-validation (stratified k-fold)  
 
 ---
@@ -69,8 +69,7 @@ Các chỉ số đánh giá:
 ## 5. Kết quả & Phân tích
 
 - **XGBoost** là mô hình hiệu suất tốt nhất và ổn định nhất.  
-- **Random Forest** và các mô hình Gradient Boosting khác cũng có hiệu năng gần tương đương.  
-- **SVM** và **Logistic Regression** cải thiện khi áp dụng PCA.  
+- **Random Forest**, **SVM** và **Logistic Regression** cũng có hiệu năng gần tương đương.  
 - **Decision Tree** đơn lẻ có hiệu năng thấp hơn rõ rệt so với ensemble.  
 
 ### 📊 Hiệu năng mô hình (F1-Score, Accuracy, Precision, Recall)
@@ -82,13 +81,13 @@ Các chỉ số đánh giá:
 ### 📑 Bảng chi tiết kết quả
 
 <p align="center">
-  <img src="doc/detail_score.png" alt="Bảng chi tiết Accuracy, Precision, Recall, F1" width="500"/>
+  <img src="doc/detail_score.png" alt="Bảng chi tiết Accuracy, Precision, Recall, F1" width="700"/>
 </p>
 
 
 ---
 
-## 6. Hướng Dẫn Tái Tạo (Reproducibility)
+## 6. Usage
 
 Clone repo và cài đặt dependency:
 ```bash
