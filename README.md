@@ -1,9 +1,9 @@
 # Spaceship Titanic – Dự đoán Vận Chuyển (Transported Prediction)
 
 **Authors:**  
-Lê Chí Đại, Nguyễn Quốc Huy, Phạm Lê Tiến Đạt, Võ Văn Thịnh (Đại học Bách Khoa TP.HCM)
+Lê Chí Đại, Nguyễn Quốc Huy, Phạm Lê Tiến Đạt, Võ Văn Thịnh (Nhóm ML4U - Đại học Bách Khoa TP.HCM)
 
-**Course:** ML4U – Bài tập lớn môn Học Máy (2025)
+**Course:** CO3117 – Bài tập lớn môn Học Máy (2025)
 
 **🌐 Project Landing Page & Report:**  
 🔗 https://caotaytang.github.io/ML-251/
