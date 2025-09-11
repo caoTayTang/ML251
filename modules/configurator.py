@@ -227,7 +227,7 @@ class Configurator:
     # -------------------------
     # Run experiments
     # -------------------------
-    def run(self):
+    def run(self, SEED):
         X_train, X_test, y_train, y_test = self.X_train, self.X_test, self.y_train, self.y_test
         numeric_features = self.config_dict["features"]["numeric"]
         categorical_features = self.config_dict["features"]["categorical"]
