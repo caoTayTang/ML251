@@ -12,3 +12,13 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import xgboost as xgb
 
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from xgboost import XGBClassifier
+
+
+from sklearn.decomposition import PCA
+
+
