@@ -132,132 +132,106 @@ class ProfessionalMLAnalyzer:
         <html>
         <head>
             <title>ML Experiment Analysis Report</title>
-            <style>
-                body {{
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                    max-width: 1200px;
-                    margin: 0 auto;
-                    padding: 20px;
-                    background-color: #f8f9fa;
-                }}
-                .header {{
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    padding: 30px;
-                    border-radius: 10px;
-                    margin-bottom: 30px;
-                    text-align: center;
-                }}
-                .header h1 {{
-                    margin: 0;
-                    font-size: 2.5em;
-                    font-weight: 300;
-                }}
-                .header p {{
-                    margin: 10px 0 0 0;
-                    opacity: 0.9;
-                    font-size: 1.1em;
-                }}
-                .section {{
-                    background: white;
-                    padding: 30px;
-                    border-radius: 10px;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                    margin-bottom: 30px;
-                }}
-                .section h2 {{
-                    color: #667eea;
-                    border-bottom: 3px solid #667eea;
-                    padding-bottom: 10px;
-                    margin-top: 0;
-                }}
-                .metric-card {{
-                    background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
-                    color: white;
-                    padding: 20px;
-                    border-radius: 10px;
-                    text-align: center;
-                    margin: 10px;
-                    min-width: 150px;
-                }}
-                .metric-card h3 {{
-                    margin: 0;
-                    font-size: 2em;
-                    font-weight: bold;
-                }}
-                .metric-card p {{
-                    margin: 5px 0 0 0;
-                    opacity: 0.9;
-                }}
-                .metrics-container {{
-                    display: flex;
-                    flex-wrap: wrap;
-                    justify-content: space-around;
-                    margin: 20px 0;
-                }}
-                .model-table {{
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin: 20px 0;
-                }}
-                .model-table th {{
-                    background-color: #667eea;
-                    color: white;
-                    padding: 12px;
-                    text-align: left;
-                }}
-                .model-table td {{
-                    padding: 12px;
-                    border-bottom: 1px solid #ddd;
-                }}
-                .model-table tr:nth-child(even) {{
-                    background-color: #f8f9fa;
-                }}
-                .model-table tr:hover {{
-                    background-color: #e3f2fd;
-                }}
-                .best-model {{
-                    background-color: #d4edda;
-                    border-left: 5px solid #28a745;
-                }}
-                .worst-model {{
-                    background-color: #f8d7da;
-                    border-left: 5px solid #dc3545;
-                }}
-                .insight-box {{
-                    background-color: #e3f2fd;
-                    border-left: 5px solid #2196f3;
-                    padding: 20px;
-                    margin: 20px 0;
-                    border-radius: 5px;
-                }}
-                .plot-container {{
-                    text-align: center;
-                    margin: 30px 0;
-                }}
-                .plot-container img {{
-                    max-width: 100%;
-                    border-radius: 10px;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                }}
-                .two-column {{
-                    display: flex;
-                    gap: 20px;
-                }}
-                .two-column > div {{
-                    flex: 1;
-                }}
-                @media (max-width: 768px) {{
-                    .two-column {{
-                        flex-direction: column;
-                    }}
-                    .metrics-container {{
-                        flex-direction: column;
-                    }}
-                }}
-            </style>
+        <style>
+            body {{
+                font-family: 'Times New Roman', serif;
+                line-height: 1.6;
+                color: #212529;
+                max-width: 900px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #ffffff; /* trắng tinh, không xám */
+            }}
+            .header {{
+                background: #f5f5f5;
+                color: #212529;
+                padding: 25px;
+                border-bottom: 1px solid #ccc;
+                margin-bottom: 30px;
+                text-align: center;
+            }}
+            .header h1 {{
+                margin: 0;
+                font-size: 2em;
+                font-weight: 600;
+                font-family: 'Georgia', serif;
+            }}
+            h2 {{
+                font-family: 'Georgia', serif;
+                font-size: 1.6em;
+                color: #212529;
+                border-bottom: 1px solid #aaa;
+                padding-bottom: 6px;
+                margin-top: 35px;
+                margin-bottom: 18px;
+            }}
+            h3 {{
+                font-family: 'Georgia', serif;
+                font-size: 1.2em;
+                color: #343a40;
+                margin-top: 25px;
+                margin-bottom: 12px;
+            }}
+            .section {{
+                background: #fff;
+                padding: 20px;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+                margin-bottom: 25px;
+            }}
+            .metric-card {{
+                background: #f8f9fa;
+                color: #212529;
+                padding: 12px;
+                border-radius: 3px;
+                text-align: center;
+                margin: 6px;
+                min-width: 120px;
+                border: 1px solid #ccc;
+            }}
+            .metric-card h3 {{
+                margin: 0;
+                font-size: 1.6em;
+                font-weight: 700;
+                color: #212529;
+            }}
+            .metric-card p {{
+                margin: 2px 0 0 0;
+                font-size: 0.85em;
+                color: #555;
+            }}
+            .model-table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin: 15px 0;
+                font-size: 0.9em;
+            }}
+            .model-table th, .model-table td {{
+                padding: 6px 10px;
+                text-align: left;
+                border-bottom: 1px solid #ccc;
+            }}
+            .model-table th {{
+                background-color: #f2f2f2;
+                color: #212529;
+                font-weight: 600;
+            }}
+            .insight-box {{
+                background-color: #f8f9fa;
+                border-left: 3px solid #333; /* neutral dark line */
+                padding: 12px;
+                margin: 18px 0;
+                border-radius: 3px;
+                font-size: 0.9em;
+            }}
+            .plot-container img {{
+                max-width: 100%;
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                box-shadow: none; /* bỏ shadow màu mè */
+            }}
+        </style>
+
         </head>
         <body>
             <div class="header">
@@ -500,8 +474,8 @@ class ProfessionalMLAnalyzer:
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
         
         # Top models
-        top_models = self.results_df.nlargest(15, 'accuracy').iloc[::-1]
-        colors_top = ['#27ae60' if i < 3 else '#2ecc71' if i < 8 else '#58d68d' for i in range(len(top_models))]
+        top_models = self.results_df.nlargest(15, 'accuracy')
+        colors_top = sns.color_palette("Blues_r", n_colors=len(top_models))
         
         bars1 = ax1.barh(range(len(top_models)), top_models['accuracy'], color=colors_top)
         ax1.set_yticks(range(len(top_models)))
@@ -522,7 +496,7 @@ class ProfessionalMLAnalyzer:
         
         # Bottom models
         bottom_models = self.results_df.nsmallest(15, 'accuracy')
-        colors_bottom = ['#e74c3c' if i < 3 else '#ec7063' if i < 8 else '#f1948a' for i in range(len(bottom_models))]
+        colors_bottom = sns.color_palette("Reds", n_colors=len(bottom_models))
         
         bars2 = ax2.barh(range(len(bottom_models)), bottom_models['accuracy'], color=colors_bottom)
         ax2.set_yticks(range(len(bottom_models)))
