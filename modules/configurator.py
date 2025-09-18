@@ -292,16 +292,17 @@ class RobustConfigurator:
             conflicts=["pca_*"]  # PCA conflicts when self-handling missing values
         ))
 
-        self.register_component("", ComponentConfig(
+        # Deep model
+        self.register_component("TabPFN", ComponentConfig(
             name="TabPFN", 
             factory_func=lambda: ComponentFactory.create_model("TabPFN"),
             description="TabPFN Deep Learning"
         ))
 
-        self.register_component("", ComponentConfig(
-            name="TabPFN", 
+        self.register_component("TabNet", ComponentConfig(
+            name="TabNet", 
             factory_func=lambda: ComponentFactory.create_model("TabNet"),
-            description="TabPFN Deep Learning"
+            description="TabNet Deep Learning"
         ))
     
     def register_component(self, key: str, config: ComponentConfig):
