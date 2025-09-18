@@ -1,0 +1,36 @@
+{
+  "model_name": "minmax_neg11_pca_0.98_xgboost_impute",
+  "metrics": {
+    "accuracy": 0.718803910293272,
+    "weighted_precision": 0.721559135150401,
+    "weighted_recall": 0.718803910293272,
+    "weighted_f1": 0.7181106391434812,
+    "timestamp": "2025-09-18T06:22:47.153800"
+  },
+  "model_path": "/content/btl1_20250918_061900/models/minmax_neg11_pca_0.98_xgboost_impute.joblib",
+  "components": {
+    "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+    "model": "ComponentConfig(name='logistic', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566d4e0>, params={}, description='Logistic Regression', dependencies=[], conflicts=[])"
+  },
+  "features": {
+    "numeric": [
+      "Age",
+      "RoomService",
+      "FoodCourt",
+      "ShoppingMall",
+      "Spa",
+      "VRDeck",
+      "Num",
+      "Group"
+    ],
+    "categorical": [
+      "Member",
+      "HomePlanet",
+      "CryoSleep",
+      "Deck",
+      "Side",
+      "Destination",
+      "VIP"
+    ]
+  }
+}

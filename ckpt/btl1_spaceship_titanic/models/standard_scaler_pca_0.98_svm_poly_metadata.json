@@ -1,0 +1,36 @@
+{
+  "model_name": "standard_scaler_pca_0.98_svm_poly",
+  "metrics": {
+    "accuracy": 0.7722829212190915,
+    "weighted_precision": 0.7748847145170635,
+    "weighted_recall": 0.7722829212190915,
+    "weighted_f1": 0.771856200579041,
+    "timestamp": "2025-09-18T06:19:47.988540"
+  },
+  "model_path": "/content/btl1_20250918_061900/models/standard_scaler_pca_0.98_svm_poly.joblib",
+  "components": {
+    "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+    "model": "ComponentConfig(name='logistic', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566d4e0>, params={}, description='Logistic Regression', dependencies=[], conflicts=[])"
+  },
+  "features": {
+    "numeric": [
+      "Age",
+      "RoomService",
+      "FoodCourt",
+      "ShoppingMall",
+      "Spa",
+      "VRDeck",
+      "Num",
+      "Group"
+    ],
+    "categorical": [
+      "Member",
+      "HomePlanet",
+      "CryoSleep",
+      "Deck",
+      "Side",
+      "Destination",
+      "VIP"
+    ]
+  }
+}

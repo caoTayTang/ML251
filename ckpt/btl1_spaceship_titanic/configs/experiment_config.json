@@ -1,0 +1,856 @@
+{
+  "experiment_name": "btl1",
+  "timestamp": "2025-09-18T06:24:07.546603",
+  "total_experiments": 108,
+  "features": {
+    "numeric": [
+      "Age",
+      "RoomService",
+      "FoodCourt",
+      "ShoppingMall",
+      "Spa",
+      "VRDeck",
+      "Num",
+      "Group"
+    ],
+    "categorical": [
+      "Member",
+      "HomePlanet",
+      "CryoSleep",
+      "Deck",
+      "Side",
+      "Destination",
+      "VIP"
+    ]
+  },
+  "experiments": [
+    {
+      "name": "standard_scaler_no_pca_logistic",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='logistic', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566d4e0>, params={}, description='Logistic Regression', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_no_pca_svm_linear",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f1a0>, params={}, description='SVM with linear kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_no_pca_svm_rbf",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f100>, params={}, description='SVM with rbf kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_no_pca_svm_poly",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566ed40>, params={}, description='SVM with poly kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_no_pca_random_forest",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='random_forest', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566df80>, params={}, description='Random Forest Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_no_pca_gradient_boosting",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='gradient_boosting', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566eb60>, params={}, description='Gradient Boosting Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_no_pca_decision_tree",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='decision_tree', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f6a0>, params={}, description='Decision Tree Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_no_pca_xgboost_impute",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566efc0>, params={}, description='XGBoost with imputation', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "standard_scaler_no_pca_xgboost_native",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e3e0>, params={}, description='XGBoost handling missing values natively', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.95_logistic",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='logistic', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566d4e0>, params={}, description='Logistic Regression', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.95_svm_linear",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f1a0>, params={}, description='SVM with linear kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.95_svm_rbf",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f100>, params={}, description='SVM with rbf kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.95_svm_poly",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566ed40>, params={}, description='SVM with poly kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.95_random_forest",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='random_forest', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566df80>, params={}, description='Random Forest Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.95_gradient_boosting",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='gradient_boosting', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566eb60>, params={}, description='Gradient Boosting Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.95_decision_tree",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='decision_tree', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f6a0>, params={}, description='Decision Tree Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.95_xgboost_impute",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566efc0>, params={}, description='XGBoost with imputation', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.95_xgboost_native",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e3e0>, params={}, description='XGBoost handling missing values natively', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.98_logistic",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='logistic', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566d4e0>, params={}, description='Logistic Regression', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.98_svm_linear",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f1a0>, params={}, description='SVM with linear kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.98_svm_rbf",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f100>, params={}, description='SVM with rbf kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.98_svm_poly",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566ed40>, params={}, description='SVM with poly kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.98_random_forest",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='random_forest', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566df80>, params={}, description='Random Forest Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.98_gradient_boosting",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='gradient_boosting', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566eb60>, params={}, description='Gradient Boosting Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.98_decision_tree",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='decision_tree', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f6a0>, params={}, description='Decision Tree Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.98_xgboost_impute",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566efc0>, params={}, description='XGBoost with imputation', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "standard_scaler_pca_0.98_xgboost_native",
+      "components": {
+        "scaler": "ComponentConfig(name='standard_scaler', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de27a0>, params={}, description='Standard Scaler (mean=0, std=1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e3e0>, params={}, description='XGBoost handling missing values natively', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_01_no_pca_logistic",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='logistic', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566d4e0>, params={}, description='Logistic Regression', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_no_pca_svm_linear",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f1a0>, params={}, description='SVM with linear kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_no_pca_svm_rbf",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f100>, params={}, description='SVM with rbf kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_no_pca_svm_poly",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566ed40>, params={}, description='SVM with poly kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_no_pca_random_forest",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='random_forest', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566df80>, params={}, description='Random Forest Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_no_pca_gradient_boosting",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='gradient_boosting', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566eb60>, params={}, description='Gradient Boosting Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_no_pca_decision_tree",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='decision_tree', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f6a0>, params={}, description='Decision Tree Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_no_pca_xgboost_impute",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566efc0>, params={}, description='XGBoost with imputation', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_01_no_pca_xgboost_native",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e3e0>, params={}, description='XGBoost handling missing values natively', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.95_logistic",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='logistic', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566d4e0>, params={}, description='Logistic Regression', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.95_svm_linear",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f1a0>, params={}, description='SVM with linear kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.95_svm_rbf",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f100>, params={}, description='SVM with rbf kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.95_svm_poly",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566ed40>, params={}, description='SVM with poly kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.95_random_forest",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='random_forest', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566df80>, params={}, description='Random Forest Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.95_gradient_boosting",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='gradient_boosting', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566eb60>, params={}, description='Gradient Boosting Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.95_decision_tree",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='decision_tree', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f6a0>, params={}, description='Decision Tree Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.95_xgboost_impute",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566efc0>, params={}, description='XGBoost with imputation', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.95_xgboost_native",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e3e0>, params={}, description='XGBoost handling missing values natively', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.98_logistic",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='logistic', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566d4e0>, params={}, description='Logistic Regression', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.98_svm_linear",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f1a0>, params={}, description='SVM with linear kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.98_svm_rbf",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f100>, params={}, description='SVM with rbf kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.98_svm_poly",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566ed40>, params={}, description='SVM with poly kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.98_random_forest",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='random_forest', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566df80>, params={}, description='Random Forest Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.98_gradient_boosting",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='gradient_boosting', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566eb60>, params={}, description='Gradient Boosting Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.98_decision_tree",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='decision_tree', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f6a0>, params={}, description='Decision Tree Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.98_xgboost_impute",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566efc0>, params={}, description='XGBoost with imputation', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_01_pca_0.98_xgboost_native",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_01', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de25c0>, params={}, description='MinMax Scaler (0-1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e3e0>, params={}, description='XGBoost handling missing values natively', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_neg11_no_pca_logistic",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='logistic', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566d4e0>, params={}, description='Logistic Regression', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_no_pca_svm_linear",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f1a0>, params={}, description='SVM with linear kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_no_pca_svm_rbf",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f100>, params={}, description='SVM with rbf kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_no_pca_svm_poly",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566ed40>, params={}, description='SVM with poly kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_no_pca_random_forest",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='random_forest', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566df80>, params={}, description='Random Forest Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_no_pca_gradient_boosting",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='gradient_boosting', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566eb60>, params={}, description='Gradient Boosting Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_no_pca_decision_tree",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='decision_tree', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f6a0>, params={}, description='Decision Tree Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_no_pca_xgboost_impute",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566efc0>, params={}, description='XGBoost with imputation', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_neg11_no_pca_xgboost_native",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e3e0>, params={}, description='XGBoost handling missing values natively', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.95_logistic",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='logistic', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566d4e0>, params={}, description='Logistic Regression', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.95_svm_linear",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f1a0>, params={}, description='SVM with linear kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.95_svm_rbf",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f100>, params={}, description='SVM with rbf kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.95_svm_poly",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566ed40>, params={}, description='SVM with poly kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.95_random_forest",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='random_forest', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566df80>, params={}, description='Random Forest Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.95_gradient_boosting",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='gradient_boosting', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566eb60>, params={}, description='Gradient Boosting Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.95_decision_tree",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='decision_tree', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f6a0>, params={}, description='Decision Tree Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.95_xgboost_impute",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566efc0>, params={}, description='XGBoost with imputation', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.95_xgboost_native",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e3e0>, params={}, description='XGBoost handling missing values natively', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.98_logistic",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='logistic', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566d4e0>, params={}, description='Logistic Regression', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.98_svm_linear",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f1a0>, params={}, description='SVM with linear kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.98_svm_rbf",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f100>, params={}, description='SVM with rbf kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.98_svm_poly",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566ed40>, params={}, description='SVM with poly kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.98_random_forest",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='random_forest', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566df80>, params={}, description='Random Forest Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.98_gradient_boosting",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='gradient_boosting', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566eb60>, params={}, description='Gradient Boosting Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.98_decision_tree",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='decision_tree', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f6a0>, params={}, description='Decision Tree Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.98_xgboost_impute",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566efc0>, params={}, description='XGBoost with imputation', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_neg11_pca_0.98_xgboost_native",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_neg11', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de37e0>, params={}, description='MinMax Scaler (-1 to 1)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e3e0>, params={}, description='XGBoost handling missing values natively', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_02_no_pca_logistic",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='logistic', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566d4e0>, params={}, description='Logistic Regression', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_no_pca_svm_linear",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f1a0>, params={}, description='SVM with linear kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_no_pca_svm_rbf",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f100>, params={}, description='SVM with rbf kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_no_pca_svm_poly",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566ed40>, params={}, description='SVM with poly kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_no_pca_random_forest",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='random_forest', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566df80>, params={}, description='Random Forest Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_no_pca_gradient_boosting",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='gradient_boosting', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566eb60>, params={}, description='Gradient Boosting Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_no_pca_decision_tree",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='decision_tree', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f6a0>, params={}, description='Decision Tree Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_no_pca_xgboost_impute",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566efc0>, params={}, description='XGBoost with imputation', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_02_no_pca_xgboost_native",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e3e0>, params={}, description='XGBoost handling missing values natively', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.95_logistic",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='logistic', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566d4e0>, params={}, description='Logistic Regression', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.95_svm_linear",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f1a0>, params={}, description='SVM with linear kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.95_svm_rbf",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f100>, params={}, description='SVM with rbf kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.95_svm_poly",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566ed40>, params={}, description='SVM with poly kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.95_random_forest",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='random_forest', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566df80>, params={}, description='Random Forest Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.95_gradient_boosting",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='gradient_boosting', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566eb60>, params={}, description='Gradient Boosting Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.95_decision_tree",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='decision_tree', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f6a0>, params={}, description='Decision Tree Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.95_xgboost_impute",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566efc0>, params={}, description='XGBoost with imputation', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.95_xgboost_native",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.95', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e5c0>, params={}, description='PCA retaining 95.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e3e0>, params={}, description='XGBoost handling missing values natively', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.98_logistic",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='logistic', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566d4e0>, params={}, description='Logistic Regression', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.98_svm_linear",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f1a0>, params={}, description='SVM with linear kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.98_svm_rbf",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f100>, params={}, description='SVM with rbf kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.98_svm_poly",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='svm', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566ed40>, params={}, description='SVM with poly kernel', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.98_random_forest",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='random_forest', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566df80>, params={}, description='Random Forest Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.98_gradient_boosting",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='gradient_boosting', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566eb60>, params={}, description='Gradient Boosting Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.98_decision_tree",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='decision_tree', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f6a0>, params={}, description='Decision Tree Classifier', dependencies=[], conflicts=[])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.98_xgboost_impute",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566efc0>, params={}, description='XGBoost with imputation', dependencies=[], conflicts=['pca_*'])"
+      }
+    },
+    {
+      "name": "minmax_02_pca_0.98_xgboost_native",
+      "components": {
+        "scaler": "ComponentConfig(name='minmax_02', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f632de3ba0>, params={}, description='MinMax Scaler (0-2)', dependencies=[], conflicts=[])",
+        "pca": "ComponentConfig(name='pca_0.98', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566f420>, params={}, description='PCA retaining 98.0% variance', dependencies=[], conflicts=[])",
+        "model": "ComponentConfig(name='xgboost', factory_func=<function RobustConfigurator._register_default_components.<locals>.<lambda> at 0x78f63566e3e0>, params={}, description='XGBoost handling missing values natively', dependencies=[], conflicts=['pca_*'])"
+      }
+    }
+  ]
+}
