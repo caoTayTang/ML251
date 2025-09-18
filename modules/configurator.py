@@ -84,7 +84,7 @@ class ComponentFactory:
         elif model_type == "decision_tree":
             return DecisionTreeClassifier(random_state=random_state, **params)
         elif model_type == "TabPFN":
-            return TabPFNClassifier(device="cuda", **params)
+            return TabPFNClassifier(**params)
         elif model_type == "TabNet":
             return TabNetClassifier(verbose=0, seed=random_state, device="cuda", **params)
 
@@ -194,7 +194,7 @@ class RobustConfigurator:
         self.pipeline_builder = PipelineBuilder(numeric_features, categorical_features)
         
         # Create directories for saving
-        self.base_dir = f"/content/{experiment_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        self.base_dir = f"/content/{experiment_name}"
         self.models_dir = os.path.join(self.base_dir, "models")
         self.results_dir = os.path.join(self.base_dir, "results")
         self.config_dir = os.path.join(self.base_dir, "configs")
@@ -290,6 +290,18 @@ class RobustConfigurator:
             factory_func=lambda: ComponentFactory.create_model("xgboost", self_handle_missing=True),
             description="XGBoost handling missing values natively",
             conflicts=["pca_*"]  # PCA conflicts when self-handling missing values
+        ))
+
+        self.register_component("", ComponentConfig(
+            name="TabPFN", 
+            factory_func=lambda: ComponentFactory.create_model("TabPFN"),
+            description="TabPFN Deep Learning"
+        ))
+
+        self.register_component("", ComponentConfig(
+            name="TabPFN", 
+            factory_func=lambda: ComponentFactory.create_model("TabNet"),
+            description="TabPFN Deep Learning"
         ))
     
     def register_component(self, key: str, config: ComponentConfig):
@@ -534,106 +546,6 @@ class RobustConfigurator:
         
         with open(results_path, 'r') as f:
             return json.load(f)
-    
-    def create_model_demo(self, model_name: str, sample_data: dict = None):
-        """Create a demo function for a specific model"""
-        if model_name not in self.trained_models:
-            # Try to load from disk
-            try:
-                pipeline, metadata = self.load_model(model_name)
-            except FileNotFoundError:
-                print(f"Model {model_name} not found in memory or disk")
-                return None
-        else:
-            pipeline = self.trained_models[model_name]
-        
-        def demo_predict(input_data):
-            """Demo prediction function"""
-            if isinstance(input_data, dict):
-                # Convert dict to DataFrame
-                df = pd.DataFrame([input_data])
-            else:
-                df = input_data
-            
-            prediction = pipeline.predict(df)
-            probabilities = None
-            
-            # Get probabilities if available
-            if hasattr(pipeline, 'predict_proba'):
-                try:
-                    probabilities = pipeline.predict_proba(df)
-                except:
-                    pass
-            
-            return {
-                "prediction": prediction.tolist() if hasattr(prediction, 'tolist') else prediction,
-                "probabilities": probabilities.tolist() if probabilities is not None else None
-            }
-        
-        return demo_predict
-    
-    def create_colab_widget_demo(self, model_name: str):
-        """Create an interactive Colab widget for model demonstration"""
-        if model_name not in self.trained_models:
-            print(f"Model {model_name} not found in trained models")
-            return None
-        
-        # Create input widgets for each feature
-        numeric_widgets = {}
-        categorical_widgets = {}
-        
-        for feature in self.numeric_features:
-            numeric_widgets[feature] = widgets.FloatText(
-                value=0.0,
-                description=feature,
-                style={'description_width': 'initial'}
-            )
-        
-        for feature in self.categorical_features:
-            # You might want to customize these options based on your data
-            categorical_widgets[feature] = widgets.Dropdown(
-                options=['Option1', 'Option2', 'Option3'],  # Replace with actual options
-                description=feature,
-                style={'description_width': 'initial'}
-            )
-        
-        predict_button = widgets.Button(description="Predict", button_style='primary')
-        output = widgets.Output()
-        
-        def on_predict_click(b):
-            with output:
-                output.clear_output()
-                
-                # Gather input data
-                input_data = {}
-                for feature, widget in numeric_widgets.items():
-                    input_data[feature] = widget.value
-                for feature, widget in categorical_widgets.items():
-                    input_data[feature] = widget.value
-                
-                # Make prediction
-                demo_func = self.create_model_demo(model_name)
-                result = demo_func(input_data)
-                
-                print(f"Prediction: {result['prediction']}")
-                if result['probabilities']:
-                    print(f"Probabilities: {result['probabilities']}")
-        
-        predict_button.on_click(on_predict_click)
-        
-        # Layout
-        numeric_box = widgets.VBox(list(numeric_widgets.values()))
-        categorical_box = widgets.VBox(list(categorical_widgets.values()))
-        input_box = widgets.HBox([numeric_box, categorical_box])
-        
-        demo_widget = widgets.VBox([
-            widgets.HTML(f"<h3>Model Demo: {model_name}</h3>"),
-            input_box,
-            predict_button,
-            output
-        ])
-        
-        return demo_widget
     
     def zip_experiment_results(self):
         """Create a ZIP file of all experiment results for download"""
