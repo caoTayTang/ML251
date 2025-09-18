@@ -414,7 +414,7 @@ class ProfessionalMLAnalyzer:
             
             model_html = "<h4>Model Type Performance</h4><ul>"
             for model, row in model_stats.iterrows():
-                model_html += f"<li><strong>{model}:</strong> {row['mean']:.4f} ± {row['std']:.4f} ({row['count']} models)</li>"
+                model_html += f"<li><strong>{model}:</strong> {row['mean']:.4f}</li>"
             model_html += "</ul>"
             analyses.append(model_html)
         
@@ -500,7 +500,7 @@ class ProfessionalMLAnalyzer:
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
         
         # Top models
-        top_models = self.results_df.nlargest(15, 'accuracy')
+        top_models = self.results_df.nlargest(15, 'accuracy').iloc[::-1]
         colors_top = ['#27ae60' if i < 3 else '#2ecc71' if i < 8 else '#58d68d' for i in range(len(top_models))]
         
         bars1 = ax1.barh(range(len(top_models)), top_models['accuracy'], color=colors_top)
