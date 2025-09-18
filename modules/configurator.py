@@ -86,7 +86,7 @@ class ComponentFactory:
         elif model_type == "TabPFN":
             return TabPFNClassifier(**params)
         elif model_type == "TabNet":
-            return TabNetClassifier(verbose=0, seed=random_state, device="cuda", **params)
+            return TabNetClassifier(verbose=0, seed=random_state, device_name="cuda", **params)
 
         raise ValueError(f"Unknown model type: {model_type}")
     
