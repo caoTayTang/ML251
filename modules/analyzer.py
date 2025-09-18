@@ -658,7 +658,6 @@ def create_professional_analysis(experiment_dir: str, top_k: int = 20, bottom_k:
     print(f"\nAnalysis Complete!")
     print(f"- Top {top_k} models analyzed and loaded")
     print(f"- Bottom {bottom_k} models analyzed")
-    print(f"- Beautiful HTML report generated")
     print(f"- Best model: {analyzer.results_df['accuracy'].idxmax()}")
     print(f"- Best accuracy: {analyzer.results_df['accuracy'].max():.4f}")
     
