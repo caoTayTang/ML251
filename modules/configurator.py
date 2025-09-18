@@ -1,4 +1,3 @@
-%%writefile RobustConfigurator.py
 import ipywidgets as widgets
 from IPython.display import display, clear_output
 from itertools import product
