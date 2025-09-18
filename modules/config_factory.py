@@ -82,9 +82,9 @@ class ComponentFactory:
         elif model_type == "decision_tree":
             return DecisionTreeClassifier(random_state=random_state, **params)
         elif model_type == "TabPFN":
-            return TabPFNClassifier(device="cuda")
+            return TabPFNClassifier(device="cuda", **params)
         elif model_type == "TabNet":
-            return TabNetClassifier(verbose=0, seed=random_state, device="cuda")
+            return TabNetClassifier(verbose=0, seed=random_state, device="cuda", **params)
 
         raise ValueError(f"Unknown model type: {model_type}")
     
