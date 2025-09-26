@@ -1,4 +1,4 @@
-# modules/deep_learning_pipeline.py
+# modules/deep_learning_pipeline_2.py
 
 import pandas as pd
 import numpy as np
@@ -65,17 +65,29 @@ class DeepLearningPipelineRunner:
         model_name = self.config.get("embedding_models", [])[0] # Giả sử chỉ có 1 model
         classifier_name = self.config.get("downstream_approaches", {}).get("static_embedding_with_classifier", [])[0]
 
-        # Trích xuất và lưu features
-        if not os.path.exists('features'):
-            os.makedirs('features')
-            
-        train_embeddings = self._extract_static_embeddings(X_train, model_name)
-        np.save('features/train_embeddings.npy', train_embeddings)
-        
-        test_embeddings = self._extract_static_embeddings(X_test, model_name)
-        np.save('features/test_embeddings.npy', test_embeddings)
 
-        print(f"Đã trích xuất và lưu embeddings. Bắt đầu huấn luyện mô hình '{classifier_name}'...")
+        train_embedding_path = 'ML251/features/train_embeddings.npy'
+        test_embedding_path = 'ML251/features/test_embeddings.npy'
+            
+        # Xử lý tập train
+        if os.path.exists(train_embedding_path):
+            print(f"Đã tìm thấy file embedding có sẵn. Đang tải '{train_embedding_path}'...")
+            train_embeddings = np.load(train_embedding_path)
+        else:
+            print("Không tìm thấy file embedding cho tập train. Bắt đầu trích xuất...")
+            train_embeddings = self._extract_static_embeddings(X_train, model_name)
+            np.save(train_embedding_path, train_embeddings)
+            print(f"Đã trích xuất và lưu vào '{train_embedding_path}'.")
+
+        # Xử lý tập test
+        if os.path.exists(test_embedding_path):
+            print(f"Đã tìm thấy file embedding có sẵn. Đang tải '{test_embedding_path}'...")
+            test_embeddings = np.load(test_embedding_path)
+        else:
+            print("Không tìm thấy file embedding cho tập test. Bắt đầu trích xuất...")
+            test_embeddings = self._extract_static_embeddings(X_test, model_name)
+            np.save(test_embedding_path, test_embeddings)
+            print(f"Đã trích xuất và lưu vào '{test_embedding_path}'.")
         
         start_time = time.time()
         
