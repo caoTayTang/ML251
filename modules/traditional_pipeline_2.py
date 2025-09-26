@@ -1,4 +1,4 @@
-# modules/traditional_pipeline.py
+# modules/traditional_pipeline_2.py
 
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
