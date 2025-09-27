@@ -5,8 +5,10 @@ scikit-learn
 xgboost
 numpy
 ipykernel
+scipy
+hmmlearn
 
 # Make sure to have CUDA on your machine
-pytorch-tabnet
-torch 
-torchvision
+# pytorch-tabnet
+# torch 
+# torchvision
