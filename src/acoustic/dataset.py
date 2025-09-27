@@ -2,7 +2,7 @@ import os
 import librosa
 import numpy as np
 from pathlib import Path
-from constants import DATA_DIR, FEATURES_DIR  # import constants
+from src.constants import DATA_DIR, FEATURES_DIR  # import constants
 
 class FSDD:
     """

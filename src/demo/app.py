@@ -4,8 +4,8 @@ import numpy as np
 import gradio as gr
 import joblib
 
-from acoustic.dataset import FSDD
-from models.hmm import HMMTrainer
+from src.acoustic.dataset import FSDD
+from src.models.hmm import HMMTrainer
 
 
 # -------------------

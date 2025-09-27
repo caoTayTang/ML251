@@ -5,7 +5,7 @@ import joblib
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 
-from constants import MODELS_CKPT
+from src.constants import MODELS_CKPT
 
 class HMMTrainer:
     """
