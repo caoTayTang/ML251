@@ -102,9 +102,11 @@ class ExperimentRunner:
                     self._run_pytorch_sequence_model(model_name, X_train_feat, y_train, X_test_feat, y_test, extractor_name, model_params)
         
         # 2. Chạy pipeline Fine-tuning độc lập
-        for model_name, model_params in finetune_config.items():
-            print(f"\n--- [Fine-Tune] Bắt đầu pipeline: {model_name} ---")
-            self._run_fine_tuning(model_name, X_train, y_train, X_test, y_test, model_params)
+        for alias_name, model_params in finetune_config.items():
+            hf_model_name = model_params.get("model_name", alias_name)  # nếu có key model_name thì lấy, không thì dùng alias
+            print(f"\n--- [Fine-Tune] Bắt đầu pipeline: {alias_name} (HF: {hf_model_name}) ---")
+            self._run_fine_tuning(alias_name, hf_model_name, X_train, y_train, X_test, y_test, model_params)
+
             
         return pd.DataFrame(self.results)
 
@@ -207,13 +209,13 @@ class ExperimentRunner:
         })
         print(f"    -> Hoàn thành trong {duration:.2f}s. F1-Score: {self.results[-1]['f1_score']:.4f}")
 
-    def _run_fine_tuning(self, model_name, X_train, y_train, X_test, y_test, params):
-        model_save_path = os.path.join(self.settings.get("model_save_path", "models"), model_name)
+    def _run_fine_tuning(self, alias_name, hf_model_name, X_train, y_train, X_test, y_test, params):
+        model_save_path = os.path.join(self.settings.get("model_save_path", "models"), alias_name)
         os.makedirs(model_save_path, exist_ok=True)
-        
+
         y_train_mapped, y_test_mapped = y_train - 1, y_test - 1
         num_labels = len(y_train.unique())
-        
+
         start_time = time.time()
         if self.settings.get("use_cache") and os.path.exists(os.path.join(model_save_path, "config.json")):
             print(f"  > Tải mô hình fine-tuned từ cache: {model_save_path}")
@@ -221,21 +223,33 @@ class ExperimentRunner:
             tokenizer = AutoTokenizer.from_pretrained(model_save_path)
             trainer_mode = "evaluate"
         else:
-            print(f"  > Huấn luyện mô hình fine-tuning từ đầu: {model_name}")
-            model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_labels).to(self.device)
-            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            print(f"  > Huấn luyện mô hình fine-tuning từ đầu: {hf_model_name}")
+            model = AutoModelForSequenceClassification.from_pretrained(hf_model_name, num_labels=num_labels).to(self.device)
+            tokenizer = AutoTokenizer.from_pretrained(hf_model_name)
             trainer_mode = "train"
 
-        train_dataset = TransformerDataset(tokenizer(X_train.tolist(), **params.get("tokenizer_params", {})), y_train_mapped.tolist())
-        test_dataset = TransformerDataset(tokenizer(X_test.tolist(), **params.get("tokenizer_params", {})), y_test_mapped.tolist())
-        
+        train_dataset = TransformerDataset(
+            tokenizer(X_train.tolist(), **params.get("tokenizer_params", {})),
+            y_train_mapped.tolist()
+        )
+        test_dataset = TransformerDataset(
+            tokenizer(X_test.tolist(), **params.get("tokenizer_params", {})),
+            y_test_mapped.tolist()
+        )
+
         training_args_dict = params.get("training_params", {})
-        training_args_dict['logging_dir'] = os.path.join(self.settings.get("log_path", "logs"), model_name)
-        training_args_dict['output_dir'] = os.path.join(self.settings.get("checkpoint_path", "checkpoints"), model_name)
+        training_args_dict['logging_dir'] = os.path.join(self.settings.get("log_path", "logs"), alias_name)
+        training_args_dict['output_dir'] = os.path.join(self.settings.get("checkpoint_path", "checkpoints"), alias_name)
         training_args = TrainingArguments(**training_args_dict)
 
-        trainer = Trainer(model=model, args=training_args, train_dataset=train_dataset, eval_dataset=test_dataset, compute_metrics=compute_metrics)
-        
+        trainer = Trainer(
+            model=model, 
+            args=training_args, 
+            train_dataset=train_dataset, 
+            eval_dataset=test_dataset, 
+            compute_metrics=compute_metrics
+        )
+
         if trainer_mode == "train":
             trainer.train()
             trainer.save_model(model_save_path)
@@ -243,13 +257,14 @@ class ExperimentRunner:
 
         eval_results = trainer.evaluate()
         duration = time.time() - start_time
-        
+
         self.results.append({
-            "type": "fine-tune", "extractor": "N/A", "model": model_name,
+            "type": "fine-tune", "extractor": "N/A", "model": alias_name,
             "f1_score": eval_results['eval_f1'], "accuracy": eval_results['eval_accuracy'],
             "time_seconds": duration
         })
         print(f"    -> Hoàn thành trong {duration:.2f}s. F1-Score: {self.results[-1]['f1_score']:.4f}")
+
 
     # --- Utility methods for feature processing ---
 
