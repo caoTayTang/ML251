@@ -1,304 +1,194 @@
-# ==============================================================================
-# File: modules/unified_pipeline.py
-# Chứa class ExperimentRunner đa năng để chạy tất cả các thử nghiệm.
-# ==============================================================================
+"""
+Unified Pipeline for Machine Learning Experiments
+Dependencies:
+    !pip install numpy scipy scikit-learn pandas joblib tqdm transformers torch tensorflow
+"""
 
 import os
 import time
 import numpy as np
 import pandas as pd
-import torch
-import torch.nn as nn
-from scipy.sparse import save_npz, load_npz
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-from sklearn.metrics import accuracy_score, f1_score
-from transformers import AutoTokenizer, AutoModel, AutoModelForSequenceClassification, Trainer, TrainingArguments
-from torch.utils.data import Dataset, DataLoader
+import joblib
 from tqdm import tqdm
-import nltk
-try:
-    nltk.data.find('tokenizers/punkt')
-except nltk.downloader.DownloadError:
-    nltk.download('punkt')
-
-# --- Helper Classes & Functions ---
-
-class PytorchSequenceDataset(Dataset):
-    def __init__(self, sequences, labels):
-        self.sequences = sequences
-        self.labels = labels
-    def __len__(self):
-        return len(self.labels)
-    def __getitem__(self, idx):
-        return torch.tensor(self.sequences[idx], dtype=torch.float32), torch.tensor(self.labels[idx], dtype=torch.long)
-
-class TransformerDataset(Dataset):
-    def __init__(self, encodings, labels):
-        self.encodings = encodings
-        self.labels = labels
-    def __getitem__(self, idx):
-        item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
-        item['labels'] = torch.tensor(self.labels[idx])
-        return item
-    def __len__(self):
-        return len(self.labels)
-
-def compute_metrics(pred):
-    labels = pred.label_ids
-    preds = pred.predictions.argmax(-1)
-    f1 = f1_score(labels, preds, average='weighted')
-    acc = accuracy_score(labels, preds)
-    return {'accuracy': acc, 'f1': f1}
-    
-class SequenceClassifier(nn.Module):
-    def __init__(self, embedding_dim, hidden_dim, output_dim, model_type='lstm', n_layers=2, dropout=0.5):
-        super().__init__()
-        RecurrentLayer = nn.LSTM if model_type == 'lstm' else nn.RNN
-        self.recurrent = RecurrentLayer(embedding_dim, hidden_dim, num_layers=n_layers,
-                                        bidirectional=True, dropout=dropout, batch_first=True)
-        self.fc = nn.Linear(hidden_dim * 2, output_dim)
-        self.dropout = nn.Dropout(dropout)
-    def forward(self, text_vectors):
-        packed_output, (hidden, cell) = self.recurrent(text_vectors)
-        hidden = self.dropout(torch.cat((hidden[-2,:,:], hidden[-1,:,:]), dim=1))
-        return self.fc(hidden)
-
-# --- Main Class: ExperimentRunner ---
+from scipy.sparse import save_npz, load_npz
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, LSTM, Dense, Bidirectional, Input
+from tensorflow.keras.callbacks import EarlyStopping
+from transformers import AutoTokenizer, AutoModel
+import torch
 
 class ExperimentRunner:
-    def __init__(self, config):
+    def __init__(self, config: dict, workdir: str = ".", save_models: bool = True, verbose: bool = True):
         self.config = config
-        self.results = []
-        self.settings = config.get("settings", {})
-        self.cache_path = self.settings.get("cache_path", "features")
-        os.makedirs(self.cache_path, exist_ok=True)
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        print(f"ExperimentRunner khởi tạo trên thiết bị: {self.device}")
+        self.workdir = workdir
+        self.save_models = save_models
+        self.verbose = verbose
+        os.makedirs(os.path.join(workdir, "features"), exist_ok=True)
+        os.makedirs(os.path.join(workdir, "artifacts"), exist_ok=True)
+        os.makedirs(os.path.join(workdir, "results"), exist_ok=True)
 
-    # --- Core Dispatcher Method ---
-    
-    def run_all_experiments(self, X_train, y_train, X_test, y_test):
-        feature_extractors_config = self.config.get("feature_extractors", {})
-        models_config = self.config.get("models", {})
-        finetune_config = self.config.get("fine_tuning_models", {})
+    def run_all_experiments(self, X_train, y_train, X_test, y_test) -> pd.DataFrame:
+        results = []
+        pipelines = self.config.get("sklearn_pipelines", []) + self.config.get("dl_pipelines", [])
+        for idx, pipeline in enumerate(pipelines):
+            pipeline_id = f"bf{idx}_{pipeline['feature_extractor']['name']}_{pipeline['model']['name']}"
+            try:
+                result = self.run_single_pipeline(pipeline, X_train, y_train, X_test, y_test, pipeline_id)
+                results.append(result)
+            except Exception as e:
+                print(f"Pipeline {pipeline_id} failed: {e}")
+        final_results_df = pd.DataFrame(results).sort_values(by="test_f1_macro", ascending=False)
+        final_results_df.to_csv(os.path.join(self.workdir, "results", "final_results.csv"), index=False)
+        return final_results_df
 
-        # 1. Chạy các pipeline kết hợp (Feature Extractor + Model)
-        for extractor_name, extractor_params in feature_extractors_config.items():
-            print(f"\n--- [Extractor] Bắt đầu xử lý đặc trưng cho: {extractor_name} ---")
-            X_train_feat, X_test_feat = self._get_features(extractor_name, X_train, X_test, extractor_params)
+    def run_single_pipeline(self, pipeline_config, X_train, y_train, X_test, y_test, pipeline_id):
+        start_time = time.time()
+        feature_cfg = pipeline_config["feature_extractor"]
+        model_cfg = pipeline_config["model"]
 
-            for model_name, model_params in models_config.items():
-                if not self._is_compatible(extractor_name, model_name):
-                    print(f"  > [Skip] Bỏ qua kết hợp không tương thích: {extractor_name} + {model_name}")
-                    continue
+        # Load or build features
+        X_train_feat, X_test_feat = self.load_or_build_feature(feature_cfg, X_train, X_test, y_train)
 
-                print(f"  > [Model] Bắt đầu huấn luyện: {model_name} trên {extractor_name}")
-                if model_name in ["logistic_regression", "svm", "naive_bayes"]:
-                    self._run_sklearn_model(model_name, X_train_feat, y_train, X_test_feat, y_test, extractor_name, model_params)
-                elif model_name in ["lstm", "rnn"]:
-                    self._run_pytorch_sequence_model(model_name, X_train_feat, y_train, X_test_feat, y_test, extractor_name, model_params)
-        
-        # 2. Chạy pipeline Fine-tuning độc lập
-        for alias_name, model_params in finetune_config.items():
-            hf_model_name = model_params.get("model_name", alias_name)  # nếu có key model_name thì lấy, không thì dùng alias
-            print(f"\n--- [Fine-Tune] Bắt đầu pipeline: {alias_name} (HF: {hf_model_name}) ---")
-            self._run_fine_tuning(alias_name, hf_model_name, X_train, y_train, X_test, y_test, model_params)
-
-            
-        return pd.DataFrame(self.results)
-
-    def _is_compatible(self, extractor_name, model_name):
-        if model_name == "naive_bayes" and extractor_name not in ["tfidf", "bow"]: return False
-        if model_name in ["lstm", "rnn"] and extractor_name not in ["glove", "word2vec"]: return False
-        if model_name in ["logistic_regression", "svm"] and extractor_name in ["glove", "word2vec"]: return False
-        return True
-
-    # --- Feature Extraction & Caching ---
-
-    def _get_features(self, extractor_name, X_train, X_test, params):
-        feature_file_base = os.path.join(self.cache_path, f"{extractor_name}")
-        
-        if self.settings.get("use_cache") and os.path.exists(f"{feature_file_base}_train.npz"):
-            print(f"  > Tải features từ cache: {feature_file_base}_*.npz")
-            X_train_feat = load_npz(f"{feature_file_base}_train.npz")
-            X_test_feat = load_npz(f"{feature_file_base}_test.npz")
-            return X_train_feat, X_test_feat
-
-        if self.settings.get("use_cache") and os.path.exists(f"{feature_file_base}.npz"):
-            print(f"  > Tải features từ cache: {feature_file_base}.npz")
-            data = np.load(f"{feature_file_base}.npz", allow_pickle=True)
-            return data['train'], data['test']
-            
-        print(f"  > Tính toán và lưu features cho: {extractor_name}")
-        if extractor_name in ["tfidf", "bow"]:
-            vec_class = TfidfVectorizer if extractor_name == "tfidf" else CountVectorizer
-            vec = vec_class(**params.get("vectorizer_params", {}))
-            X_train_feat = vec.fit_transform(X_train)
-            X_test_feat = vec.transform(X_test)
-            save_npz(f"{feature_file_base}_train.npz", X_train_feat)
-            save_npz(f"{feature_file_base}_test.npz", X_test_feat)
-        elif extractor_name == "bert_static":
-            X_train_feat, X_test_feat = self._extract_transformer_embeddings(params['model'], X_train, X_test)
-            np.savez_compressed(f"{feature_file_base}.npz", train=X_train_feat, test=X_test_feat)
-        elif extractor_name == "glove":
-            embedding_model = self._load_glove_embeddings(params['path'])
-            X_train_feat = self._texts_to_sequences(X_train, embedding_model)
-            X_test_feat = self._texts_to_sequences(X_test, embedding_model)
-            np.savez_compressed(f"{feature_file_base}.npz", train=X_train_feat, test=X_test_feat)
+        # Train model
+        if model_cfg["name"] in ["multinomial_nb", "logistic_regression", "linear_svc"]:
+            model, train_time = self.train_sklearn_model(model_cfg, X_train_feat, y_train)
+        elif model_cfg["name"] in ["rnn", "lstm"]:
+            model, train_time = self.train_dl_model(model_cfg, X_train_feat, y_train)
         else:
-            raise ValueError(f"Feature extractor '{extractor_name}' không được hỗ trợ.")
-        return X_train_feat, X_test_feat
+            raise ValueError(f"Unsupported model: {model_cfg['name']}")
 
-    # --- Model Runner Helpers ---
+        # Evaluate model
+        inference_start = time.time()
+        y_pred = model.predict(X_test_feat)
+        inference_time = time.time() - inference_start
 
-    def _run_sklearn_model(self, model_name, X_train_vec, y_train, X_test_vec, y_test, extractor_name, params):
-        model_map = {"logistic_regression": LogisticRegression, "svm": LinearSVC, "naive_bayes": MultinomialNB}
-        model = model_map[model_name](**params.get("model_params", {}))
-        
-        start_time = time.time()
-        model.fit(X_train_vec, y_train)
-        y_pred = model.predict(X_test_vec)
-        duration = time.time() - start_time
-        
-        self.results.append({
-            "type": "sklearn", "extractor": extractor_name, "model": model_name,
-            "f1_score": f1_score(y_test, y_pred, average='weighted'),
-            "accuracy": accuracy_score(y_test, y_pred),
-            "time_seconds": duration
-        })
-        print(f"    -> Hoàn thành trong {duration:.2f}s. F1-Score: {self.results[-1]['f1_score']:.4f}")
+        metrics = {
+            "test_f1_macro": f1_score(y_test, y_pred, average="macro"),
+            "test_accuracy": accuracy_score(y_test, y_pred),
+            "test_precision_macro": precision_score(y_test, y_pred, average="macro"),
+            "test_recall_macro": recall_score(y_test, y_pred, average="macro"),
+        }
 
-    def _run_pytorch_sequence_model(self, model_name, X_train_seq, y_train, X_test_seq, y_test, extractor_name, params):
-        embedding_dim = X_train_seq.shape[2]
-        num_labels = len(y_train.unique())
-        y_train_mapped = y_train.values - 1
-        y_test_mapped = y_test.values - 1
-        
-        train_dataset = PytorchSequenceDataset(X_train_seq, y_train_mapped)
-        test_dataset = PytorchSequenceDataset(X_test_seq, y_test_mapped)
-        train_loader = DataLoader(train_dataset, shuffle=True, batch_size=params.get('batch_size', 64))
-        test_loader = DataLoader(test_dataset, batch_size=params.get('batch_size', 128))
+        # Save model artifact
+        model_path = None
+        if self.save_models:
+            model_path = os.path.join(self.workdir, "artifacts", f"{pipeline_id}.joblib")
+            if model_cfg["name"] in ["multinomial_nb", "logistic_regression", "linear_svc"]:
+                joblib.dump(model, model_path)
+            elif model_cfg["name"] in ["rnn", "lstm"]:
+                model.save(model_path)
 
-        model = SequenceClassifier(embedding_dim, **params.get("model_params", {}), output_dim=num_labels, model_type=model_name).to(self.device)
-        optimizer = torch.optim.Adam(model.parameters())
-        criterion = nn.CrossEntropyLoss().to(self.device)
-        
-        start_time = time.time()
-        model.train()
-        for epoch in range(params.get('epochs', 3)):
-            for texts, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}", leave=False):
-                texts, labels = texts.to(self.device), labels.to(self.device)
-                optimizer.zero_grad(); output = model(texts); loss = criterion(output, labels); loss.backward(); optimizer.step()
+        return {
+            "pipeline_id": pipeline_id,
+            "feature_extractor_name": feature_cfg["name"],
+            "model_name": model_cfg["name"],
+            "train_time_s": train_time,
+            "inference_time_s": inference_time,
+            "model_artifact_path": model_path,
+            **metrics,
+        }
 
-        model.eval()
-        all_preds, all_labels = [], []
-        with torch.no_grad():
-            for texts, labels in test_loader:
-                texts, labels = texts.to(self.device), labels.to(self.device)
-                all_preds.extend(model(texts).argmax(dim=1).cpu().numpy())
-                all_labels.extend(labels.cpu().numpy())
-        duration = time.time() - start_time
+    def load_or_build_feature(self, feature_cfg, X_train, X_test, y_train=None):
+        precomputed = feature_cfg.get("precomputed", {})
+        if "file" in precomputed and os.path.exists(precomputed["file"]):
+            data = np.load(precomputed["file"])
+            return data["X_train"], data["X_test"]
+        elif "train_file" in precomputed and os.path.exists(precomputed["train_file"]):
+            return load_npz(precomputed["train_file"]), load_npz(precomputed["test_file"])
 
-        self.results.append({
-            "type": "sequence", "extractor": extractor_name, "model": model_name,
-            "f1_score": f1_score(all_labels, all_preds, average='weighted'),
-            "accuracy": accuracy_score(all_labels, all_preds), "time_seconds": duration
-        })
-        print(f"    -> Hoàn thành trong {duration:.2f}s. F1-Score: {self.results[-1]['f1_score']:.4f}")
-
-    def _run_fine_tuning(self, alias_name, hf_model_name, X_train, y_train, X_test, y_test, params):
-        model_save_path = os.path.join(self.settings.get("model_save_path", "models"), alias_name)
-        os.makedirs(model_save_path, exist_ok=True)
-
-        y_train_mapped, y_test_mapped = y_train - 1, y_test - 1
-        num_labels = len(y_train.unique())
-
-        start_time = time.time()
-        if self.settings.get("use_cache") and os.path.exists(os.path.join(model_save_path, "config.json")):
-            print(f"  > Tải mô hình fine-tuned từ cache: {model_save_path}")
-            model = AutoModelForSequenceClassification.from_pretrained(model_save_path).to(self.device)
-            tokenizer = AutoTokenizer.from_pretrained(model_save_path)
-            trainer_mode = "evaluate"
+        if feature_cfg["name"] in ["bow", "tfidf"]:
+            return self.compute_bow_or_tfidf(feature_cfg["name"], feature_cfg["params"], X_train, X_test)
+        elif feature_cfg["name"] == "glove_mean":
+            return self.compute_glove_mean(feature_cfg.get("params", {}), X_train, X_test)
+        elif feature_cfg["name"] == "bert_cls":
+            return self.compute_bert_cls(feature_cfg["params"]["model_name"], X_train, X_test)
         else:
-            print(f"  > Huấn luyện mô hình fine-tuning từ đầu: {hf_model_name}")
-            model = AutoModelForSequenceClassification.from_pretrained(hf_model_name, num_labels=num_labels).to(self.device)
-            tokenizer = AutoTokenizer.from_pretrained(hf_model_name)
-            trainer_mode = "train"
+            raise ValueError(f"Unsupported feature extractor: {feature_cfg['name']}")
 
-        train_dataset = TransformerDataset(
-            tokenizer(X_train.tolist(), **params.get("tokenizer_params", {})),
-            y_train_mapped.tolist()
-        )
-        test_dataset = TransformerDataset(
-            tokenizer(X_test.tolist(), **params.get("tokenizer_params", {})),
-            y_test_mapped.tolist()
-        )
+    def compute_bow_or_tfidf(self, kind, params, X_train_texts, X_test_texts):
+        vectorizer = CountVectorizer(**params) if kind == "bow" else TfidfVectorizer(**params)
+        X_train_mat = vectorizer.fit_transform(X_train_texts)
+        X_test_mat = vectorizer.transform(X_test_texts)
+        save_npz(os.path.join(self.workdir, "features", f"{kind}_train.npz"), X_train_mat)
+        save_npz(os.path.join(self.workdir, "features", f"{kind}_test.npz"), X_test_mat)
+        return X_train_mat, X_test_mat
 
-        training_args_dict = params.get("training_params", {})
-        training_args_dict['logging_dir'] = os.path.join(self.settings.get("log_path", "logs"), alias_name)
-        training_args_dict['output_dir'] = os.path.join(self.settings.get("checkpoint_path", "checkpoints"), alias_name)
-        training_args = TrainingArguments(**training_args_dict)
-
-        trainer = Trainer(
-            model=model, 
-            args=training_args, 
-            train_dataset=train_dataset, 
-            eval_dataset=test_dataset, 
-            compute_metrics=compute_metrics
-        )
-
-        if trainer_mode == "train":
-            trainer.train()
-            trainer.save_model(model_save_path)
-            print(f"  > Đã lưu model vào: {model_save_path}")
-
-        eval_results = trainer.evaluate()
-        duration = time.time() - start_time
-
-        self.results.append({
-            "type": "fine-tune", "extractor": "N/A", "model": alias_name,
-            "f1_score": eval_results['eval_f1'], "accuracy": eval_results['eval_accuracy'],
-            "time_seconds": duration
-        })
-        print(f"    -> Hoàn thành trong {duration:.2f}s. F1-Score: {self.results[-1]['f1_score']:.4f}")
-
-
-    # --- Utility methods for feature processing ---
-
-    def _extract_transformer_embeddings(self, model_name, X_train, X_test):
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModel.from_pretrained(model_name).to(self.device)
-        def get_embeddings(texts):
-            all_embeddings = []
-            for i in tqdm(range(0, len(texts), 32), desc="  > Extracting Embeddings", leave=False):
-                batch = texts[i:i+32].tolist()
-                inputs = tokenizer(batch, return_tensors='pt', padding=True, truncation=True, max_length=256).to(self.device)
-                with torch.no_grad():
-                    outputs = model(**inputs)
-                all_embeddings.append(outputs.last_hidden_state[:, 0, :].cpu().numpy())
-            return np.vstack(all_embeddings)
-        return get_embeddings(X_train), get_embeddings(X_test)
-        
-    def _load_glove_embeddings(self, path):
-        print(f"  > Đang tải GloVe embeddings từ {path}...")
-        embeddings_dict = {}
-        with open(path, 'r', encoding="utf-8") as f:
-            for line in tqdm(f, desc="  > Loading GloVe file"):
+    def compute_glove_mean(self, params, X_train_texts, X_test_texts):
+        glove_path = params.get("glove_txt_path", "glove.6B.100d.txt")
+        embedding_dim = params.get("embedding_dim", 100)
+        if not os.path.exists(glove_path):
+            raise FileNotFoundError(f"GloVe file not found at {glove_path}")
+        embeddings = {}
+        with open(glove_path, "r", encoding="utf-8") as f:
+            for line in f:
                 values = line.split()
                 word = values[0]
-                embeddings_dict[word] = np.asarray(values[1:], "float32")
-        return embeddings_dict
+                vector = np.asarray(values[1:], dtype="float32")
+                embeddings[word] = vector
+        def embed_text(texts):
+            return np.array([
+                np.mean([embeddings[word] for word in text.split() if word in embeddings] or [np.zeros(embedding_dim)], axis=0)
+                for text in texts
+            ])
+        X_train_vec = embed_text(X_train_texts)
+        X_test_vec = embed_text(X_test_texts)
+        np.savez_compressed(os.path.join(self.workdir, "features", "glove.npz"), X_train=X_train_vec, X_test=X_test_vec)
+        return X_train_vec, X_test_vec
 
-    def _texts_to_sequences(self, texts, embedding_model, max_len=128):
-        embedding_dim = len(next(iter(embedding_model.values())))
-        sequences = []
-        for text in tqdm(texts, desc="  > Processing texts to sequences", leave=False):
-            tokens = nltk.word_tokenize(text.lower())
-            vectors = [embedding_model.get(token, np.zeros(embedding_dim)) for token in tokens[:max_len]]
-            if len(vectors) < max_len:
-                vectors.extend([np.zeros(embedding_dim)] * (max_len - len(vectors)))
-            sequences.append(vectors)
-        return np.array(sequences, dtype=np.float32)
+    def compute_bert_cls(self, model_name, X_train_texts, X_test_texts, batch_size=32, device="cpu"):
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModel.from_pretrained(model_name).to(device)
+        def embed_texts(texts):
+            embeddings = []
+            for i in tqdm(range(0, len(texts), batch_size), desc="BERT embedding"):
+                batch = texts[i:i+batch_size]
+                inputs = tokenizer(batch, padding=True, truncation=True, return_tensors="pt").to(device)
+                with torch.no_grad():
+                    outputs = model(**inputs)
+                embeddings.append(outputs.last_hidden_state[:, 0, :].cpu().numpy())
+            return np.vstack(embeddings)
+        X_train_vec = embed_texts(X_train_texts)
+        X_test_vec = embed_texts(X_test_texts)
+        np.savez_compressed(os.path.join(self.workdir, "features", "bert_static.npz"), X_train=X_train_vec, X_test=X_test_vec)
+        return X_train_vec, X_test_vec
+
+    def train_sklearn_model(self, model_cfg, X_train, y_train):
+        model_class = {
+            "multinomial_nb": "sklearn.naive_bayes.MultinomialNB",
+            "logistic_regression": "sklearn.linear_model.LogisticRegression",
+            "linear_svc": "sklearn.svm.LinearSVC",
+        }[model_cfg["name"]]
+        model = eval(model_class)()
+        hpo_space = model_cfg.get("hpo_space", {})
+        search = RandomizedSearchCV(model, hpo_space, n_iter=self.config["settings"]["hpo_settings"]["n_iter"],
+                                    cv=self.config["settings"]["hpo_settings"]["cv_folds"], scoring="f1_macro", n_jobs=-1)
+        start_time = time.time()
+        search.fit(X_train, y_train)
+        train_time = time.time() - start_time
+        return search.best_estimator_, train_time
+
+    def train_dl_model(self, model_cfg, X_train, y_train):
+        num_classes = len(np.unique(y_train))
+        model = Sequential([
+            Input(shape=(X_train.shape[1], X_train.shape[2])),
+            LSTM(128, return_sequences=False),
+            Dense(num_classes, activation="softmax")
+        ])
+        model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+        early_stopping = EarlyStopping(monitor="val_loss", patience=3, restore_best_weights=True)
+        start_time = time.time()
+        model.fit(X_train, y_train, validation_split=0.2, epochs=20, batch_size=32, callbacks=[early_stopping], verbose=1)
+        train_time = time.time() - start_time
+        return model, train_time
+
+if __name__ == "__main__":
+    print("Unified Pipeline Module Loaded.")
+    print("Example usage:")
+    print("""
+    from unified_pipeline import ExperimentRunner, EXPERIMENT_CONFIG
+    runner = ExperimentRunner(config=EXPERIMENT_CONFIG)
+    final_results_df = runner.run_all_experiments(X_train, y_train, X_test, y_test)
+    """)
