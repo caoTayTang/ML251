@@ -43,7 +43,7 @@ def predict(file_obj):
 def ensure_models():
     if not os.path.exists("../models/btl3_acoustic/hmm_models.pkl"):
         print("[INFO] No trained models found. Training...")
-        dataset = FSDD("../../data/audio/recording")
+        dataset = FSDD()
         X, y = dataset.prepare_data()
 
         from sklearn.model_selection import train_test_split
