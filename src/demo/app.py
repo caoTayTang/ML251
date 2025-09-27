@@ -6,6 +6,7 @@ import joblib
 
 from src.acoustic.dataset import FSDD
 from src.models.hmm import HMMTrainer
+from src.constants import MODELS_CKPT
 
 
 # -------------------
@@ -41,7 +42,7 @@ def predict(file_obj):
 # Ensure models exist
 # -------------------
 def ensure_models():
-    if not os.path.exists("../models/btl3_acoustic/hmm_models.pkl"):
+    if not os.path.exists(MODELS_CKPT):
         print("[INFO] No trained models found. Training...")
         dataset = FSDD()
         X, y = dataset.prepare_data()
@@ -59,7 +60,7 @@ def ensure_models():
 # -------------------
 # Launch Gradio demo
 # -------------------
-def launch_demo():
+def launch_demo(share=True):
     ensure_models()
 
     demo = gr.Interface(
@@ -70,4 +71,4 @@ def launch_demo():
         title="🎤 HMM Speech Recognition (Digits)",
         description="Record or upload an audio file of a spoken digit (0-9). The HMM model will predict it."
     )
-    demo.launch()
+    demo.launch(share=share)
