@@ -264,13 +264,33 @@ class ExperimentRunner:
                 data = np.load(precomputed["file"])
                 # Check for different possible key naming conventions
                 if 'X_train' in data.files and 'X_test' in data.files:
-                    return data["X_train"], data["X_test"]
+                    X_train_feat = data["X_train"]
+                    X_test_feat = data["X_test"]
                 elif 'train' in data.files and 'test' in data.files:
-                    return data["train"], data["test"]
+                    X_train_feat = data["train"]
+                    X_test_feat = data["test"]
                 else:
                     print(f"    Warning: Expected keys 'X_train'/'X_test' or 'train'/'test' not found in {precomputed['file']}")
                     print(f"    Available keys: {list(data.files)}")
                     # Fall through to rebuild features
+                    X_train_feat = None
+                    X_test_feat = None
+                
+                # Special handling for bert_sequence - need to transform to 3D
+                if X_train_feat is not None and feature_cfg["name"] == "bert_sequence":
+                    if self.verbose:
+                        print(f"    Transforming BERT features from {X_train_feat.shape} to sequence format")
+                    
+                    max_len = feature_cfg.get("params", {}).get("max_len", 200)
+                    # Transform from 2D (samples, 768) to 3D (samples, max_len, 768)
+                    X_train_feat = np.repeat(X_train_feat[:, np.newaxis, :], max_len, axis=1)
+                    X_test_feat = np.repeat(X_test_feat[:, np.newaxis, :], max_len, axis=1)
+                    
+                    if self.verbose:
+                        print(f"    Transformed to sequence: train {X_train_feat.shape}, test {X_test_feat.shape}")
+                
+                if X_train_feat is not None:
+                    return X_train_feat, X_test_feat
             else:
                 data = np.load(precomputed["file"])
                 return data["X_train"], data["X_test"]
@@ -468,6 +488,7 @@ class ExperimentRunner:
 
     def train_dl_model(self, model_cfg, X_train, y_train, X_test, y_test):
         from tensorflow.keras.utils import to_categorical
+        from tensorflow.keras.layers import Dropout
         
         num_classes = len(np.unique(y_train))
         input_shape = X_train.shape[1:]
@@ -494,9 +515,13 @@ class ExperimentRunner:
             return_sequences = (i < num_layers - 1)  # Only last layer returns single output
             
             if model_cfg["name"] == "rnn":
-                model.add(SimpleRNN(hidden_dim, return_sequences=return_sequences, dropout=dropout))
+                model.add(SimpleRNN(hidden_dim, return_sequences=return_sequences))
             elif model_cfg["name"] == "lstm":
-                model.add(LSTM(hidden_dim, return_sequences=return_sequences, dropout=dropout))
+                model.add(LSTM(hidden_dim, return_sequences=return_sequences))
+
+            # Add dropout after each RNN/LSTM layer
+            if dropout > 0:
+                model.add(Dropout(dropout))
         
         # Add output layer
         model.add(Dense(num_classes, activation="softmax"))
