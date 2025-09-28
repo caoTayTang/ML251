@@ -210,7 +210,8 @@ class ExperimentRunner:
         if model_cfg["name"] in ["multinomial_nb", "logistic_regression", "linear_svc"]:
             y_pred = model.predict(X_test_feat)
         else:  # Deep learning models
-            y_pred = np.argmax(model.predict(X_test_feat), axis=-1)
+            y_pred_proba = model.predict(X_test_feat)
+            y_pred = np.argmax(y_pred_proba, axis=-1) + 1
             
         inference_time = time.time() - inference_start
 
@@ -472,8 +473,8 @@ class ExperimentRunner:
         input_shape = X_train.shape[1:]
         
         # Convert labels to categorical if needed
-        y_train_cat = to_categorical(y_train, num_classes)
-        y_test_cat = to_categorical(y_test, num_classes)
+        y_train_cat = to_categorical(y_train - 1, num_classes)
+        y_test_cat = to_categorical(y_test - 1, num_classes)
         
         # Sample hyperparameters from space (simplified - you may want to use proper HPO)
         hidden_dim = np.random.choice(model_cfg["hpo_space"]["hidden_dim"])
