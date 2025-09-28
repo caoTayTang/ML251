@@ -247,13 +247,6 @@ class ExperimentRunner:
 
     def load_or_build_feature(self, feature_cfg, X_train, X_test, y_train=None):
         precomputed = feature_cfg.get("precomputed", {})
-        
-        # Check for precomputed features
-        # if "file" in precomputed and os.path.exists(precomputed["file"]):
-        #     if self.verbose:
-        #         print(f"  Loading precomputed features from {precomputed['file']}")
-        #     data = np.load(precomputed["file"])
-        #     return data["X_train"], data["X_test"]
 
         if "file" in precomputed and os.path.exists(precomputed["file"]):
             if self.verbose:
@@ -277,7 +270,7 @@ class ExperimentRunner:
                     X_test_feat = None
                 
                 # Special handling for bert_sequence - need to transform to 3D
-                if X_train_feat is not None and feature_cfg["name"] == "bert_sequence":
+                if X_train_feat is not None and feature_cfg["name"] == "bert_sequence" and "bert_static.npz" in precomputed["file"]:
                     if self.verbose:
                         print(f"    Transforming BERT features from {X_train_feat.shape} to sequence format")
                     
@@ -521,7 +514,7 @@ class ExperimentRunner:
         lr = model_cfg["hpo_space"]["lr"].rvs()
         
         if self.verbose:
-            print(f"    DL Hyperparameters: hidden_dim={hidden_dim}, layers={num_layers}, dropout={dropout}, lr={lr:.5f}")
+            print(f"    DL Hyperparameters: hidden_dim={hidden_dim}, layers={num_layers}, dropout={dropout_rate}, lr={lr:.5f}")
         
         # Build model
         model = Sequential()
