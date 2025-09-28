@@ -286,7 +286,7 @@ class ExperimentRunner:
                     return X_train_feat, X_test_feat
             else:
                 data = np.load(precomputed["file"])
-                return data["X_train"], data["X_test"]
+                return data["train"], data["test"]
             
         elif "train_file" in precomputed and "test_file" in precomputed:
             if os.path.exists(precomputed["train_file"]) and os.path.exists(precomputed["test_file"]):
@@ -507,14 +507,15 @@ class ExperimentRunner:
         y_train_cat = to_categorical(y_train - 1, num_classes)
         y_test_cat = to_categorical(y_test - 1, num_classes)
         
-        # Sample hyperparameters from space (simplified - you may want to use proper HPO)
-        hidden_dim = np.random.choice(model_cfg["hpo_space"]["hidden_dim"])
-        num_layers = np.random.choice(model_cfg["hpo_space"]["num_layers"])
-        dropout_rate = np.random.choice(model_cfg["hpo_space"]["dropout"])
-        lr = model_cfg["hpo_space"]["lr"].rvs()
+        # Sample hyperparameters from space - CONVERT TO PYTHON NATIVE TYPES
+        hidden_dim = int(np.random.choice(model_cfg["hpo_space"]["hidden_dim"]))
+        num_layers = int(np.random.choice(model_cfg["hpo_space"]["num_layers"]))
+        dropout_rate = float(np.random.choice(model_cfg["hpo_space"]["dropout"]))
+        lr = float(model_cfg["hpo_space"]["lr"].rvs())
         
         if self.verbose:
             print(f"    DL Hyperparameters: hidden_dim={hidden_dim}, layers={num_layers}, dropout={dropout_rate}, lr={lr:.5f}")
+            print(f"    Types: hidden_dim={type(hidden_dim)}, num_layers={type(num_layers)}")
         
         # Build model
         model = Sequential()
@@ -543,9 +544,11 @@ class ExperimentRunner:
             loss="categorical_crossentropy",
             metrics=["accuracy"]
         )
+        
         if self.verbose:
             print("    Model summary:")
             model.summary()
+        
         # Train model
         early_stopping = EarlyStopping(monitor="val_loss", patience=3, restore_best_weights=True, verbose=0)
         
