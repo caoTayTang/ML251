@@ -27,7 +27,7 @@ def extract_features(file_path, n_mfcc, sr):
 def predict(file_obj):
     print(file_obj)
     # Load trained HMMs
-    models = joblib.load("../models/btl3_acoustic/hmm_models.pkl")
+    models = joblib.load(MODELS_CKPT)
     dataset = FSDD()   # just to get label mapping
 
     mfcc = extract_features(file_obj, n_mfcc=dataset.n_mfcc, sr=dataset.sr)
@@ -60,7 +60,7 @@ def ensure_models():
 # -------------------
 # Launch Gradio demo
 # -------------------
-def launch_demo(share=True):
+def launch_demo(share=True, debug=True):
     ensure_models()
 
     demo = gr.Interface(
@@ -71,4 +71,4 @@ def launch_demo(share=True):
         title="🎤 HMM Speech Recognition (Digits)",
         description="Record or upload an audio file of a spoken digit (0-9). The HMM model will predict it."
     )
-    demo.launch(share=share)
+    demo.launch(share=share, debug=debug)
