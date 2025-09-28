@@ -248,11 +248,31 @@ class ExperimentRunner:
         precomputed = feature_cfg.get("precomputed", {})
         
         # Check for precomputed features
+        # if "file" in precomputed and os.path.exists(precomputed["file"]):
+        #     if self.verbose:
+        #         print(f"  Loading precomputed features from {precomputed['file']}")
+        #     data = np.load(precomputed["file"])
+        #     return data["X_train"], data["X_test"]
+
         if "file" in precomputed and os.path.exists(precomputed["file"]):
             if self.verbose:
                 print(f"  Loading precomputed features from {precomputed['file']}")
-            data = np.load(precomputed["file"])
-            return data["X_train"], data["X_test"]
+            
+            # Fix: Handle .npz file loading properly
+            if precomputed["file"].endswith('.npz'):
+                data = np.load(precomputed["file"])
+                # Check for different possible key naming conventions
+                if 'X_train' in data.files and 'X_test' in data.files:
+                    return data["X_train"], data["X_test"]
+                elif 'train' in data.files and 'test' in data.files:
+                    return data["train"], data["test"]
+                else:
+                    print(f"    Warning: Expected keys 'X_train'/'X_test' or 'train'/'test' not found in {precomputed['file']}")
+                    print(f"    Available keys: {list(data.files)}")
+                    # Fall through to rebuild features
+            else:
+                data = np.load(precomputed["file"])
+                return data["X_train"], data["X_test"]
             
         elif "train_file" in precomputed and "test_file" in precomputed:
             if os.path.exists(precomputed["train_file"]) and os.path.exists(precomputed["test_file"]):
