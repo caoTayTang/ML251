@@ -422,21 +422,33 @@ class ExperimentRunner:
         bert_file = os.path.join(self.workdir, "features", "bert_static.npz")
         if os.path.exists(bert_file):
             data = np.load(bert_file)
-            X_train_bert = data["X_train"]
-            X_test_bert = data["X_test"]
+            # Handle different key naming conventions
+            if 'X_train' in data.files and 'X_test' in data.files:
+                X_train_bert = data["X_train"]
+                X_test_bert = data["X_test"]
+            elif 'train' in data.files and 'test' in data.files:
+                X_train_bert = data["train"]
+                X_test_bert = data["test"]
+            else:
+                raise ValueError(f"Unexpected keys in bert_static.npz: {list(data.files)}")
+        
+            if self.verbose:
+                print(f"    Loaded BERT features: train {X_train_bert.shape}, test {X_test_bert.shape}")
             
-            # Reshape for sequence models (add time dimension)
-            X_train_seq = X_train_bert.reshape(X_train_bert.shape[0], 1, X_train_bert.shape[1])
-            X_test_seq = X_test_bert.reshape(X_test_bert.shape[0], 1, X_test_bert.shape[1])
+            # Transform from 2D (samples, 768) to 3D (samples, max_len, 768)
+            X_train_seq = np.repeat(X_train_bert[:, np.newaxis, :], max_len, axis=1)
+            X_test_seq = np.repeat(X_test_bert[:, np.newaxis, :], max_len, axis=1)
             
-            # Repeat to create sequence
-            X_train_seq = np.repeat(X_train_seq, max_len, axis=1)
-            X_test_seq = np.repeat(X_test_seq, max_len, axis=1)
+            if self.verbose:
+                print(f"    Transformed to sequence: train {X_train_seq.shape}, test {X_test_seq.shape}")
         else:
             # Return dummy sequences
             embedding_dim = 768  # DistilBERT dimension
             X_train_seq = np.random.randn(len(X_train_texts), max_len, embedding_dim).astype(np.float32)
             X_test_seq = np.random.randn(len(X_test_texts), max_len, embedding_dim).astype(np.float32)
+            
+            if self.verbose:
+                print(f"    Using dummy sequences: train {X_train_seq.shape}, test {X_test_seq.shape}")
         
         return X_train_seq, X_test_seq
 
@@ -492,6 +504,11 @@ class ExperimentRunner:
         
         num_classes = len(np.unique(y_train))
         input_shape = X_train.shape[1:]
+
+        if self.verbose:
+            print(f"    Input shape: {input_shape}")
+            print(f"    X_train shape: {X_train.shape}")
+            print(f"    Number of classes: {num_classes}")
         
         # Convert labels to categorical if needed
         y_train_cat = to_categorical(y_train - 1, num_classes)
@@ -500,7 +517,7 @@ class ExperimentRunner:
         # Sample hyperparameters from space (simplified - you may want to use proper HPO)
         hidden_dim = np.random.choice(model_cfg["hpo_space"]["hidden_dim"])
         num_layers = np.random.choice(model_cfg["hpo_space"]["num_layers"])
-        dropout = np.random.choice(model_cfg["hpo_space"]["dropout"])
+        dropout_rate = np.random.choice(model_cfg["hpo_space"]["dropout"])
         lr = model_cfg["hpo_space"]["lr"].rvs()
         
         if self.verbose:
@@ -520,8 +537,8 @@ class ExperimentRunner:
                 model.add(LSTM(hidden_dim, return_sequences=return_sequences))
 
             # Add dropout after each RNN/LSTM layer
-            if dropout > 0:
-                model.add(Dropout(dropout))
+            if dropout_rate > 0:
+                model.add(Dropout(dropout_rate))
         
         # Add output layer
         model.add(Dense(num_classes, activation="softmax"))
@@ -533,7 +550,9 @@ class ExperimentRunner:
             loss="categorical_crossentropy",
             metrics=["accuracy"]
         )
-        
+        if self.verbose:
+            print("    Model summary:")
+            model.summary()
         # Train model
         early_stopping = EarlyStopping(monitor="val_loss", patience=3, restore_best_weights=True, verbose=0)
         
