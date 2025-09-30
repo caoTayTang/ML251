@@ -18,6 +18,11 @@ from tensorflow.keras.layers import Embedding, LSTM, Dense, Bidirectional, Input
 from tensorflow.keras.callbacks import EarlyStopping
 from transformers import AutoTokenizer, AutoModel
 import torch
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.layers import Dropout, BatchNormalization, Dense, Bidirectional
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
+import tensorflow as tf
 
 
 class ExperimentRunner:
@@ -113,7 +118,7 @@ class ExperimentRunner:
             y_pred = model.predict(X_test_feat)
         else:  # Deep learning models
             y_pred_proba = model.predict(X_test_feat)
-            y_pred = np.argmax(y_pred_proba, axis=-1) + 1
+            y_pred = np.argmax(y_pred_proba, axis=-1)
             
         inference_time = time.time() - inference_start
 
@@ -170,19 +175,6 @@ class ExperimentRunner:
                     # Fall through to rebuild features
                     X_train_feat = None
                     X_test_feat = None
-                
-                # Special handling for bert_sequence - need to transform to 3D
-                if X_train_feat is not None and feature_cfg["name"] == "bert_sequence" and "bert_static.npz" in precomputed["file"]:
-                    if self.verbose:
-                        print(f"    Transforming BERT features from {X_train_feat.shape} to sequence format")
-                    
-                    max_len = feature_cfg.get("params", {}).get("max_len", 200)
-                    # Transform from 2D (samples, 768) to 3D (samples, max_len, 768)
-                    X_train_feat = np.repeat(X_train_feat[:, np.newaxis, :], max_len, axis=1)
-                    X_test_feat = np.repeat(X_test_feat[:, np.newaxis, :], max_len, axis=1)
-                    
-                    if self.verbose:
-                        print(f"    Transformed to sequence: train {X_train_feat.shape}, test {X_test_feat.shape}")
                 
                 if X_train_feat is not None:
                     return X_train_feat, X_test_feat
@@ -407,9 +399,6 @@ class ExperimentRunner:
             return base_model, train_time
 
     def train_dl_model(self, model_cfg, X_train, y_train, X_test, y_test):
-        from tensorflow.keras.utils import to_categorical
-        from tensorflow.keras.layers import Dropout
-        
         num_classes = len(np.unique(y_train))
         input_shape = X_train.shape[1:]
 
@@ -418,10 +407,10 @@ class ExperimentRunner:
             print(f"    X_train shape: {X_train.shape}")
             print(f"    Number of classes: {num_classes}")
         
-        # Convert labels to categorical if needed
+        # Fix label encoding: labels 1-5 -> 0-4 for to_categorical
         y_train_cat = to_categorical(y_train - 1, num_classes)
         y_test_cat = to_categorical(y_test - 1, num_classes)
-        
+
         # Sample hyperparameters from space - CONVERT TO PYTHON NATIVE TYPES
         hidden_dim = int(np.random.choice(model_cfg["hpo_space"]["hidden_dim"]))
         num_layers = int(np.random.choice(model_cfg["hpo_space"]["num_layers"]))
@@ -430,57 +419,94 @@ class ExperimentRunner:
         
         if self.verbose:
             print(f"    DL Hyperparameters: hidden_dim={hidden_dim}, layers={num_layers}, dropout={dropout_rate}, lr={lr:.5f}")
-            print(f"    Types: hidden_dim={type(hidden_dim)}, num_layers={type(num_layers)}")
         
-        # Build model
+        # Enhanced model architecture
         model = Sequential()
         model.add(Input(shape=input_shape))
         
-        # Add RNN or LSTM layers
+        # Add Bidirectional RNN/LSTM layers for better context understanding
         for i in range(num_layers):
-            return_sequences = (i < num_layers - 1)  # Only last layer returns single output
+            return_sequences = (i < num_layers - 1)
             
             if model_cfg["name"] == "rnn":
-                model.add(SimpleRNN(hidden_dim, return_sequences=return_sequences))
+                # Use Bidirectional RNN for better sequence modeling
+                model.add(Bidirectional(SimpleRNN(hidden_dim, return_sequences=return_sequences)))
             elif model_cfg["name"] == "lstm":
-                model.add(LSTM(hidden_dim, return_sequences=return_sequences))
+                # Use Bidirectional LSTM for better sequence modeling
+                model.add(Bidirectional(LSTM(hidden_dim, return_sequences=return_sequences)))
 
-            # Add dropout after each RNN/LSTM layer
+            # Add BatchNormalization for training stability
+            if not return_sequences:  # Only after last layer
+                model.add(BatchNormalization())
+            
+            # Add dropout for regularization
             if dropout_rate > 0:
                 model.add(Dropout(dropout_rate))
         
-        # Add output layer
+        # Add dense layers for better feature learning
+        model.add(Dense(hidden_dim, activation='relu'))
+        model.add(BatchNormalization())
+        model.add(Dropout(dropout_rate))
+        
+        # Additional dense layer for complex pattern learning
+        model.add(Dense(hidden_dim // 2, activation='relu'))
+        model.add(BatchNormalization())
+        model.add(Dropout(dropout_rate * 0.5))  # Reduced dropout in final layers
+        
+        # Output layer
         model.add(Dense(num_classes, activation="softmax"))
         
-        # Compile model
-        from tensorflow.keras.optimizers import Adam
+        # Compile with improved optimizer settings
         model.compile(
-            optimizer=Adam(learning_rate=lr),
+            optimizer=Adam(
+                learning_rate=lr,
+                beta_1=0.9,
+                beta_2=0.999,
+                epsilon=1e-8,
+                clipnorm=1.0  # Gradient clipping to prevent exploding gradients
+            ),
             loss="categorical_crossentropy",
             metrics=["accuracy"]
         )
         
         if self.verbose:
-            print("    Model summary:")
+            print("    Enhanced Model Architecture:")
             model.summary()
         
-        # Train model
-        early_stopping = EarlyStopping(monitor="val_loss", patience=3, restore_best_weights=True, verbose=0)
+        # Enhanced training with better callbacks
+        early_stopping = EarlyStopping(
+            monitor="val_accuracy",  # Monitor accuracy instead of loss
+            patience=7,  # Increased patience
+            restore_best_weights=True,
+            verbose=0,
+            mode='max'
+        )
+        
+        reduce_lr = ReduceLROnPlateau(
+            monitor='val_loss',
+            factor=0.5,
+            patience=3,
+            min_lr=1e-7,
+            verbose=0
+        )
         
         start_time = time.time()
         history = model.fit(
             X_train, y_train_cat,
             validation_data=(X_test, y_test_cat),
-            epochs=20,
-            batch_size=32,
-            callbacks=[early_stopping],
-            verbose=0
+            epochs=50,  # Increased epochs
+            batch_size=16,  # Smaller batch size for better convergence
+            callbacks=[early_stopping, reduce_lr],
+            verbose=0,
+            shuffle=True  # Shuffle data each epoch
         )
         train_time = time.time() - start_time
         
         if self.verbose:
             print(f"    Trained for {len(history.history['loss'])} epochs")
             print(f"    Final val_accuracy: {history.history['val_accuracy'][-1]:.4f}")
+            print(f"    Best val_accuracy: {max(history.history['val_accuracy']):.4f}")
+            print(f"    Final learning rate: {model.optimizer.learning_rate.numpy():.2e}")
         
         return model, train_time
 
