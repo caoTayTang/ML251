@@ -408,8 +408,8 @@ class ExperimentRunner:
             print(f"    Number of classes: {num_classes}")
         
         # Fix label encoding: labels 1-5 -> 0-4 for to_categorical
-        y_train_cat = to_categorical(y_train - 1, num_classes)
-        y_test_cat = to_categorical(y_test - 1, num_classes)
+        y_train_cat = to_categorical(y_train, num_classes)
+        y_test_cat = to_categorical(y_test, num_classes)
 
         # Sample hyperparameters from space - CONVERT TO PYTHON NATIVE TYPES
         hidden_dim = int(np.random.choice(model_cfg["hpo_space"]["hidden_dim"]))
@@ -509,6 +509,24 @@ class ExperimentRunner:
             print(f"    Final learning rate: {model.optimizer.learning_rate.numpy():.2e}")
         
         return model, train_time
+    
+    def validate_labels(self, y_train, y_test):
+        # Validate that labels are in expected range [0, num_classes-1]
+        train_min, train_max = y_train.min(), y_train.max()
+        test_min, test_max = y_test.min(), y_test.max()
+        
+        if train_min < 0 or test_min < 0:
+            raise ValueError(f"Labels contain negative values: train_min={train_min}, test_min={test_min}")
+        
+        if train_max != test_max:
+            print(f"Warning: Different max labels in train ({train_max}) and test ({test_max})")
+        
+        num_classes = max(train_max, test_max) + 1
+        
+        if self.verbose:
+            print(f"Label validation: range [0, {num_classes-1}], train: [{train_min}, {train_max}], test: [{test_min}, {test_max}]")
+        
+        return num_classes
 
 if __name__ == "__main__":
     print("Unified Pipeline Module Loaded.")
