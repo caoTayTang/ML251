@@ -19,126 +19,6 @@ from tensorflow.keras.callbacks import EarlyStopping
 from transformers import AutoTokenizer, AutoModel
 import torch
 
-# Export configuration
-EXPERIMENT_CONFIG = {
-    "settings": {
-        "use_cache": True,
-        "cache_path": "features",
-        "hpo_settings": {
-            "n_iter": 15,
-            "cv_folds": 3
-        }
-    },
-
-    # Các pipeline với sklearn models
-    "sklearn_pipelines": [
-        # --- BoW Unigram ---
-        {"feature_extractor": {"name": "bow", "params": {"ngram_range": (1, 1), "max_features": 20000},
-                               "precomputed": {"train_file": "features/bow_train_unigram.npz",
-                                               "test_file": "features/bow_test_unigram.npz"}},
-         "model": {"name": "multinomial_nb", "hpo_space": {"alpha": loguniform(1e-3, 1e0)}}},
-
-        {"feature_extractor": {"name": "bow", "params": {"ngram_range": (1, 1), "max_features": 20000},
-                               "precomputed": {"train_file": "features/bow_train_unigram.npz",
-                                               "test_file": "features/bow_test_unigram.npz"}},
-         "model": {"name": "logistic_regression", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                                "class_weight": [None, "balanced"]}}},
-
-        {"feature_extractor": {"name": "bow", "params": {"ngram_range": (1, 1), "max_features": 20000},
-                               "precomputed": {"train_file": "features/bow_train_unigram.npz",
-                                               "test_file": "features/bow_test_unigram.npz"}},
-         "model": {"name": "linear_svc", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                       "class_weight": [None, "balanced"]}}},
-
-        # --- BoW Bigram ---
-        {"feature_extractor": {"name": "bow", "params": {"ngram_range": (1, 2), "max_features": 30000},
-                               "precomputed": {"train_file": "features/bow_train_bigram.npz",
-                                               "test_file": "features/bow_test_bigram.npz"}},
-         "model": {"name": "logistic_regression", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                                "class_weight": [None, "balanced"]}}},
-
-        {"feature_extractor": {"name": "bow", "params": {"ngram_range": (1, 2), "max_features": 30000},
-                               "precomputed": {"train_file": "features/bow_train_bigram.npz",
-                                               "test_file": "features/bow_test_bigram.npz"}},
-         "model": {"name": "linear_svc", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                       "class_weight": [None, "balanced"]}}},
-
-        # --- TF-IDF Unigram ---
-        {"feature_extractor": {"name": "tfidf", "params": {"ngram_range": (1, 1), "max_features": 20000},
-                               "precomputed": {"train_file": "features/tfidf_train_unigram.npz",
-                                               "test_file": "features/tfidf_test_unigram.npz"}},
-         "model": {"name": "multinomial_nb", "hpo_space": {"alpha": loguniform(1e-3, 1e0)}}},
-
-        {"feature_extractor": {"name": "tfidf", "params": {"ngram_range": (1, 1), "max_features": 20000},
-                               "precomputed": {"train_file": "features/tfidf_train_unigram.npz",
-                                               "test_file": "features/tfidf_test_unigram.npz"}},
-         "model": {"name": "logistic_regression", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                                "class_weight": [None, "balanced"]}}},
-
-        {"feature_extractor": {"name": "tfidf", "params": {"ngram_range": (1, 1), "max_features": 20000},
-                               "precomputed": {"train_file": "features/tfidf_train_unigram.npz",
-                                               "test_file": "features/tfidf_test_unigram.npz"}},
-         "model": {"name": "linear_svc", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                       "class_weight": [None, "balanced"]}}},
-
-        # --- TF-IDF Bigram ---
-        {"feature_extractor": {"name": "tfidf", "params": {"ngram_range": (1, 2), "max_features": 30000},
-                               "precomputed": {"train_file": "features/tfidf_train_bigram.npz",
-                                               "test_file": "features/tfidf_test_bigram.npz"}},
-         "model": {"name": "multinomial_nb", "hpo_space": {"alpha": loguniform(1e-3, 1e0)}}},
-
-        {"feature_extractor": {"name": "tfidf", "params": {"ngram_range": (1, 2), "max_features": 30000},
-                               "precomputed": {"train_file": "features/tfidf_train_bigram.npz",
-                                               "test_file": "features/tfidf_test_bigram.npz"}},
-         "model": {"name": "logistic_regression", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                                "class_weight": [None, "balanced"]}}},
-
-        {"feature_extractor": {"name": "tfidf", "params": {"ngram_range": (1, 2), "max_features": 30000},
-                               "precomputed": {"train_file": "features/tfidf_train_bigram.npz",
-                                               "test_file": "features/tfidf_test_bigram.npz"}},
-         "model": {"name": "linear_svc", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                       "class_weight": [None, "balanced"]}}},
-
-        # --- GloVe Mean Pooling ---
-        {"feature_extractor": {"name": "glove_mean", "params": {"embedding_dim": 100},
-                               "precomputed": {"file": "features/glove.npz"}},
-         "model": {"name": "logistic_regression", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                                "class_weight": [None, "balanced"]}}},
-
-        {"feature_extractor": {"name": "glove_mean", "params": {"embedding_dim": 100},
-                               "precomputed": {"file": "features/glove.npz"}},
-         "model": {"name": "linear_svc", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                       "class_weight": [None, "balanced"]}}},
-
-        # --- BERT Static Embedding ---
-        {"feature_extractor": {"name": "bert_cls", "params": {"model_name": "distilbert-base-uncased"},
-                               "precomputed": {"file": "features/bert_static.npz"}},
-         "model": {"name": "logistic_regression", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                                "class_weight": [None, "balanced"]}}},
-
-        {"feature_extractor": {"name": "bert_cls", "params": {"model_name": "distilbert-base-uncased"},
-                               "precomputed": {"file": "features/bert_static.npz"}},
-         "model": {"name": "linear_svc", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                       "class_weight": [None, "balanced"]}}}
-    ],
-
-    # Các pipeline với Deep Learning models
-    "dl_pipelines": [
-        {"feature_extractor": {"name": "bert_sequence", "params": {"model_name": "distilbert-base-uncased", "max_len": 200},
-                               "precomputed": {"file": "features/bert_static.npz"}},
-         "model": {"name": "rnn", "hpo_space": {"hidden_dim": [64, 128, 256],
-                                                "num_layers": [1, 2],
-                                                "dropout": [0.2, 0.5],
-                                                "lr": loguniform(1e-4, 1e-2)}}},
-
-        {"feature_extractor": {"name": "bert_sequence", "params": {"model_name": "distilbert-base-uncased", "max_len": 200},
-                               "precomputed": {"file": "features/bert_static.npz"}},
-         "model": {"name": "lstm", "hpo_space": {"hidden_dim": [64, 128, 256],
-                                                 "num_layers": [1, 2],
-                                                 "dropout": [0.2, 0.5],
-                                                 "lr": loguniform(1e-4, 1e-2)}}}
-    ]
-}
 
 class ExperimentRunner:
     def __init__(self, config: dict, workdir: str = ".", save_models: bool = True, verbose: bool = True):
@@ -155,7 +35,29 @@ class ExperimentRunner:
         pipelines = self.config.get("sklearn_pipelines", []) + self.config.get("dl_pipelines", [])
         
         for idx, pipeline in enumerate(pipelines):
-            pipeline_id = f"pipeline_{idx}_{pipeline['feature_extractor']['name']}_{pipeline['model']['name']}"
+            # Enhanced pipeline_id generation with more details
+            feature_name = pipeline['feature_extractor']['name']
+            model_name = pipeline['model']['name']
+            
+            # Add ngram info for bow/tfidf features
+            if feature_name in ['bow', 'tfidf']:
+                ngram_range = pipeline['feature_extractor']['params'].get('ngram_range', (1, 1))
+                if ngram_range == (1, 1):
+                    ngram_type = "unigram"
+                elif ngram_range == (1, 2):
+                    ngram_type = "bigram"
+                elif ngram_range == (1, 3):
+                    ngram_type = "trigram"
+                elif ngram_range == (2, 2):
+                    ngram_type = "bigram_only"
+                elif ngram_range == (3, 3):
+                    ngram_type = "trigram_only"
+                else:
+                    ngram_type = f"ngram_{ngram_range[0]}_{ngram_range[1]}"
+                
+                pipeline_id = f"pipeline_{idx}_{feature_name}_{ngram_type}_{model_name}"
+            else:
+                pipeline_id = f"pipeline_{idx}_{feature_name}_{model_name}"
             
             if self.verbose:
                 print(f"\n{'='*60}")
@@ -316,8 +218,21 @@ class ExperimentRunner:
         X_train_mat = vectorizer.fit_transform(X_train_texts)
         X_test_mat = vectorizer.transform(X_test_texts)
         
-        # Save with proper naming
-        ngram_type = "unigram" if params.get("ngram_range") == (1, 1) else "bigram"
+        # Save with proper naming - handle all ngram types
+        ngram_range = params.get("ngram_range", (1, 1))
+        if ngram_range == (1, 1):
+            ngram_type = "unigram"
+        elif ngram_range == (1, 2):
+            ngram_type = "bigram"
+        elif ngram_range == (1, 3):
+            ngram_type = "trigram"
+        elif ngram_range == (2, 2):
+            ngram_type = "bigram_only"
+        elif ngram_range == (3, 3):
+            ngram_type = "trigram_only"
+        else:
+            ngram_type = f"ngram_{ngram_range[0]}_{ngram_range[1]}"
+        
         train_file = os.path.join(self.workdir, "features", f"{kind}_train_{ngram_type}.npz")
         test_file = os.path.join(self.workdir, "features", f"{kind}_test_{ngram_type}.npz")
         
