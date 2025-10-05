@@ -379,37 +379,9 @@ class ExperimentRunner:
         if model_cfg["name"] == "multinomial_nb":
             base_model = MultinomialNB()
         elif model_cfg["name"] == "logistic_regression":
-            base_model = LogisticRegression(max_iter=1000, random_state=42)
-            base_model = LogisticRegression(max_iter=1000, random_state=42)
-           # Với dense (BERT): scale + lbfgs; với sparse (BoW/TF-IDF): saga
-            try:
-               from scipy.sparse import issparse
-               is_sparse = issparse(X_train)
-            except Exception:
-               is_sparse = False
-
-            if is_sparse:
-                base_model = LogisticRegression(
-                    solver="saga",
-                    max_iter=5000,
-                    C=1.0,
-                    tol=1e-3,
-                    random_state=42
-                )
-            else:
-                base_model = Pipeline(steps=[
-                    ("scaler", StandardScaler(with_mean=True)),
-                    ("clf", LogisticRegression(
-                        solver="lbfgs",
-                        max_iter=5000,
-                        C=1.0,
-                        tol=1e-4,
-                        random_state=42,
-                        multi_class="auto"
-                    ))
-                ])
+            base_model = LogisticRegression(max_iter=2000, random_state=42)
         elif model_cfg["name"] == "linear_svc":
-            base_model = LinearSVC(max_iter=10000, random_state=42)
+            base_model = LinearSVC(max_iter=10000, tol=1e-3, dual=True, random_state=42)
         else:
             raise ValueError(f"Unknown model: {model_cfg['name']}")
         
