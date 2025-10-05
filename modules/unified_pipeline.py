@@ -63,6 +63,24 @@ class ExperimentRunner:
                 pipeline_id = f"pipeline_{idx}_{feature_name}_{ngram_type}_{model_name}"
             else:
                 pipeline_id = f"pipeline_{idx}_{feature_name}_{model_name}"
+
+            # Check if it's a DL model with retrain=False
+            if pipeline['model']['name'] in ['rnn', 'lstm'] and not pipeline['model'].get('retrain', True):
+                # Load pre-existing results from CSV
+                result_path = os.path.join(self.workdir, pipeline['model']['result_path'])
+                if os.path.exists(result_path):
+                    pre_results_df = pd.read_csv(result_path)
+                    # Assuming the CSV has the same columns as our result dict
+                    # Add or update pipeline_id if needed
+                    pre_results_df['pipeline_id'] = pipeline_id
+                    results.extend(pre_results_df.to_dict('records'))
+                    
+                    if self.verbose:
+                        print(f"✓ Loaded pre-existing results for {pipeline_id} from {result_path}")
+                        print(f"  Loaded {len(pre_results_df)} results")
+                else:
+                    print(f"✗ Result file not found for {pipeline_id}: {result_path}")
+                continue
             
             if self.verbose:
                 print(f"\n{'='*60}")
@@ -99,6 +117,8 @@ class ExperimentRunner:
         start_time = time.time()
         feature_cfg = pipeline_config["feature_extractor"]
         model_cfg = pipeline_config["model"]
+
+        
 
         # Load or build features
         X_train_feat, X_test_feat = self.load_or_build_feature(feature_cfg, X_train, X_test, y_train)
