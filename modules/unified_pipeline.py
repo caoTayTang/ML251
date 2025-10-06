@@ -24,8 +24,10 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
 import tensorflow as tf
 from scipy.sparse import save_npz, load_npz
+from transformers import AutoTokenizer, AutoModel
 from sklearn.preprocessing import StandardScaler
-
+from transformers import AutoModelForSequenceClassification
+import torch.nn.functional as F
 
 class ExperimentRunner:
     def __init__(self, config: dict, workdir: str = ".", save_models: bool = True, verbose: bool = True):
@@ -39,8 +41,12 @@ class ExperimentRunner:
 
     def run_all_experiments(self, X_train, y_train, X_test, y_test) -> pd.DataFrame:
         results = []
-        pipelines = self.config.get("sklearn_pipelines", []) + self.config.get("dl_pipelines", [])
-        
+        pipelines = (
+            self.config.get("sklearn_pipelines", [])
+            + self.config.get("dl_pipelines", [])
+            + self.config.get("finetune_pipelines", [])
+        )
+
         for idx, pipeline in enumerate(pipelines):
             # Enhanced pipeline_id generation with more details
             feature_name = pipeline['feature_extractor']['name']
@@ -83,7 +89,36 @@ class ExperimentRunner:
                 else:
                     print(f"✗ Result file not found for {pipeline_id}: {result_path}")
                 continue
-            
+
+            # Finetune: nếu retrain=False và đã có file kết quả -> chỉ load; nếu chưa có -> chạy inference và lưu
+            if pipeline['model']['name'] == 'finetune':
+                result_path = os.path.join(self.workdir, pipeline['model']['result_path'])
+                if (not pipeline['model'].get('retrain', True)) and os.path.exists(result_path):
+                    pre_results_df = pd.read_csv(result_path)
+                    pre_results_df['pipeline_id'] = pipeline_id
+                    results.extend(pre_results_df.to_dict('records'))
+                    if self.verbose:
+                        print(f"✓ Loaded pre-existing finetune results for {pipeline_id} from {result_path}")
+                        print(f"  Loaded {len(pre_results_df)} results")
+                    continue
+                # Nếu chưa có file kết quả, thực hiện inference và lưu
+                if self.verbose:
+                    print(f"\n{'='*60}")
+                    print(f"Running Pipeline {idx+1}/{len(pipelines)}: {pipeline_id}")
+                    print(f"{'='*60}")
+                try:
+                    result = self.run_finetune_pipeline(pipeline, X_test, y_test, pipeline_id)
+                    results.append(result)
+                    if self.verbose:
+                        print(f"✓ Finetune inference completed")
+                        print(f"  Test F1 Macro: {result['test_f1_macro']:.4f}")
+                        print(f"  Test Accuracy: {result['test_accuracy']:.4f}")
+                except Exception as e:
+                    print(f"✗ Finetune pipeline {pipeline_id} failed: {e}")
+                    if self.verbose:
+                        import traceback; traceback.print_exc()
+                continue
+
             if self.verbose:
                 print(f"\n{'='*60}")
                 print(f"Running Pipeline {idx+1}/{len(pipelines)}: {pipeline_id}")
@@ -105,7 +140,7 @@ class ExperimentRunner:
                     traceback.print_exc()
         
         final_results_df = pd.DataFrame(results).sort_values(by="test_f1_macro", ascending=False)
-        results_path = os.path.join(self.workdir, "results", "final_results.csv")
+        results_path = os.path.join(self.workdir, "BTL2/results", "final_results.csv")
         final_results_df.to_csv(results_path, index=False)
         
         if self.verbose:
@@ -532,23 +567,68 @@ class ExperimentRunner:
         
         return model, train_time
     
-    def validate_labels(self, y_train, y_test):
-        # Validate that labels are in expected range [0, num_classes-1]
-        train_min, train_max = y_train.min(), y_train.max()
-        test_min, test_max = y_test.min(), y_test.max()
-        
-        if train_min < 0 or test_min < 0:
-            raise ValueError(f"Labels contain negative values: train_min={train_min}, test_min={test_min}")
-        
-        if train_max != test_max:
-            print(f"Warning: Different max labels in train ({train_max}) and test ({test_max})")
-        
-        num_classes = max(train_max, test_max) + 1
-        
+    def run_finetune_pipeline(self, pipeline_config, X_test_texts, y_test, pipeline_id):
+        feature_cfg = pipeline_config["feature_extractor"]
+        model_cfg = pipeline_config["model"]
+        params = feature_cfg.get("params", {})
+        max_len = int(params.get("max_len", 128))
+        # Ưu tiên checkpoint_path trong model_cfg; nếu không có, fallback model_name
+        ckpt_rel = model_cfg.get("checkpoint_path") or params.get("model_name")
+        ckpt_path = ckpt_rel if os.path.isabs(ckpt_rel) else os.path.join(self.workdir, ckpt_rel)
+        result_path = os.path.join(self.workdir, model_cfg["result_path"])
+
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         if self.verbose:
-            print(f"Label validation: range [0, {num_classes-1}], train: [{train_min}, {train_max}], test: [{test_min}, {test_max}]")
-        
-        return num_classes
+            print(f"  Loading finetuned model from: {ckpt_path} (device: {device})")
+
+        tokenizer = AutoTokenizer.from_pretrained(ckpt_path)
+        model = AutoModelForSequenceClassification.from_pretrained(ckpt_path).to(device)
+        model.eval()
+
+        # Inference theo batch
+        batch_size = 32
+        all_preds = []
+        inference_start = time.time()
+        with torch.no_grad():
+            for i in tqdm(range(0, len(X_test_texts), batch_size), desc="Finetune inference"):
+                batch_texts = X_test_texts[i:i+batch_size]
+                inputs = tokenizer(
+                    list(batch_texts),
+                    padding=True,
+                    truncation=True,
+                    max_length=max_len,
+                    return_tensors="pt"
+                ).to(device)
+                outputs = model(**inputs)
+                logits = outputs.logits
+                preds = torch.argmax(logits, dim=-1).detach().cpu().numpy()
+                all_preds.append(preds)
+        inference_time = time.time() - inference_start
+        y_pred = np.concatenate(all_preds, axis=0)
+
+        metrics = {
+            "test_f1_macro": f1_score(y_test, y_pred, average="macro"),
+            "test_accuracy": accuracy_score(y_test, y_pred),
+            "test_precision_macro": precision_score(y_test, y_pred, average="macro", zero_division=0),
+            "test_recall_macro": recall_score(y_test, y_pred, average="macro", zero_division=0),
+        }
+
+        # Lưu kết quả 1 dòng ra CSV theo yêu cầu
+        row = {
+            "pipeline_id": pipeline_id,
+            "feature_extractor_name": feature_cfg["name"],
+            "model_name": model_cfg["name"],
+            "train_time_s": None,          # để trống
+            "inference_time_s": inference_time,
+            "total_time_s": None,          # để trống
+            "model_artifact_path": ckpt_path,
+            **metrics,
+        }
+        os.makedirs(os.path.dirname(result_path), exist_ok=True)
+        pd.DataFrame([row]).to_csv(result_path, index=False)
+        if self.verbose:
+            print(f"  Saved finetune results to: {result_path}")
+        return row
 
 if __name__ == "__main__":
     print("Unified Pipeline Module Loaded.")
