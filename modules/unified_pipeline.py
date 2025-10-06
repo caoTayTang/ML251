@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import numpy as np
 import pandas as pd
@@ -28,6 +29,8 @@ from transformers import AutoTokenizer, AutoModel
 from sklearn.preprocessing import StandardScaler
 from transformers import AutoModelForSequenceClassification
 import torch.nn.functional as F
+import re
+from transformers import pipeline as hf_pipeline
 
 class ExperimentRunner:
     def __init__(self, config: dict, workdir: str = ".", save_models: bool = True, verbose: bool = True):
@@ -581,30 +584,26 @@ class ExperimentRunner:
         if self.verbose:
             print(f"  Loading finetuned model from: {ckpt_path} (device: {device})")
 
-        tokenizer = AutoTokenizer.from_pretrained(ckpt_path)
-        model = AutoModelForSequenceClassification.from_pretrained(ckpt_path).to(device)
-        model.eval()
+        # Dùng transformers.pipeline để inference đơn giản
+        classifier = hf_pipeline(
+            "text-classification",
+            model=ckpt_path,
+            tokenizer=ckpt_path,
+            device=device,
+            truncation=True,
+            padding="max_length",
+            max_length=max_len
+        )
+        texts = list(X_test_texts)
+        start_inf = time.time()
+        predictions = classifier(texts)
+        inference_time = time.time() - start_inf
 
-        # Inference theo batch
-        batch_size = 32
-        all_preds = []
-        inference_start = time.time()
-        with torch.no_grad():
-            for i in tqdm(range(0, len(X_test_texts), batch_size), desc="Finetune inference"):
-                batch_texts = X_test_texts[i:i+batch_size]
-                inputs = tokenizer(
-                    list(batch_texts),
-                    padding=True,
-                    truncation=True,
-                    max_length=max_len,
-                    return_tensors="pt"
-                ).to(device)
-                outputs = model(**inputs)
-                logits = outputs.logits
-                preds = torch.argmax(logits, dim=-1).detach().cpu().numpy()
-                all_preds.append(preds)
-        inference_time = time.time() - inference_start
-        y_pred = np.concatenate(all_preds, axis=0)
+        # Parse nhãn dạng 'LABEL_0'/'label_3' -> 0..N
+        def to_int_label(label_str: str) -> int:
+            m = re.search(r'(\d+)$', str(label_str))
+            return int(m.group(1)) if m else 0
+        y_pred = np.array([to_int_label(p["label"]) for p in predictions], dtype=int)
 
         metrics = {
             "test_f1_macro": f1_score(y_test, y_pred, average="macro"),
