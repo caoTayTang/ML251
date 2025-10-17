@@ -6,8 +6,6 @@ import pandas as pd
 import joblib
 from tqdm import tqdm
 from scipy.sparse import save_npz, load_npz
-from scipy.stats import loguniform
-from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
@@ -25,12 +23,24 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
 import tensorflow as tf
 from scipy.sparse import save_npz, load_npz
+from scipy import sparse as sp
 from transformers import AutoTokenizer, AutoModel
 from sklearn.preprocessing import StandardScaler
 from transformers import AutoModelForSequenceClassification
 import torch.nn.functional as F
 import re
 from transformers import pipeline as hf_pipeline
+
+
+LINEAR_SVC_CONFIGS = {
+    "bow_unigram":  {"dual": False, "tol": 1e-3, "max_iter": 2000},
+    "bow_bigram":   {"dual": True,  "tol": 1e-3, "max_iter": 2000},
+    "bow_trigram":  {"dual": True,  "tol": 1e-3, "max_iter": 1500},
+    "tfidf_unigram": {"dual": False, "tol": 1e-3, "max_iter": 2000},
+    "tfidf_bigram":  {"dual": True,  "tol": 1e-3, "max_iter": 2000},
+    "tfidf_trigram": {"dual": True,  "tol": 1e-3, "max_iter": 1500},
+    "bert_cls":      {"dual": False, "tol": 1e-4, "max_iter": 1000}
+}
 
 class ExperimentRunner:
     def __init__(self, config: dict, workdir: str = ".", save_models: bool = True, verbose: bool = True):
@@ -161,7 +171,7 @@ class ExperimentRunner:
         
 
         # Load or build features
-        X_train_feat, X_test_feat = self.load_or_build_feature(feature_cfg, X_train, X_test, y_train)
+        X_train_feat, X_test_feat = self.load_or_build_feature(feature_cfg, X_train, X_test, y_train, feature_cfg=feature_cfg)
 
         # Train model
         if model_cfg["name"] in ["multinomial_nb", "logistic_regression", "linear_svc"]:
@@ -412,51 +422,53 @@ class ExperimentRunner:
         
         return X_train_seq, X_test_seq
 
-    def train_sklearn_model(self, model_cfg, X_train, y_train):
-        # Create model instance
+    def train_sklearn_model(self, model_cfg, X_train, y_train, feature_cfg=None):
+        # Decide if we need a scaler (yes for LR and LinearSVC; no for MultinomialNB)
+        use_scaler = model_cfg["name"] in ["logistic_regression", "linear_svc"]
+        is_sparse = sp.issparse(X_train)
+        scaler = StandardScaler(with_mean=not is_sparse) if use_scaler else None
+
+        # Create estimator (and pipeline when scaling is used)
         if model_cfg["name"] == "multinomial_nb":
-            base_model = MultinomialNB()
+            base_estimator = MultinomialNB()
         elif model_cfg["name"] == "logistic_regression":
-            base_model = LogisticRegression(max_iter=2000, random_state=42)
+            classifier = LogisticRegression(max_iter=2000, random_state=42)
+            base_estimator = Pipeline(steps=[("scaler", scaler), ("classifier", classifier)])
         elif model_cfg["name"] == "linear_svc":
-            base_model = LinearSVC(max_iter=10000, tol=1e-3, dual=True, random_state=42)
+            # Build feature key for dynamic config
+            feat_key = None
+            if feature_cfg is not None:
+                fname = feature_cfg.get("name")
+                if fname in ["bow", "tfidf"]:
+                    ngram = feature_cfg.get("params", {}).get("ngram_range", (1, 1))
+                    if ngram in [(1, 1)]:
+                        tag = "unigram"
+                    elif ngram in [(1, 2), (2, 2)]:
+                        tag = "bigram"
+                    elif ngram in [(1, 3), (3, 3)]:
+                        tag = "trigram"
+                    else:
+                        tag = None
+                    if tag:
+                        feat_key = f"{fname}_{tag}"
+                elif fname == "bert_cls":
+                    feat_key = "bert_cls"
+
+            # Default params; override from config map if available
+            svc_params = {"dual": True, "tol": 1e-3, "max_iter": 1000}
+            if feat_key and feat_key in LINEAR_SVC_CONFIGS:
+                svc_params.update(LINEAR_SVC_CONFIGS[feat_key])
+
+            classifier = LinearSVC(random_state=42, **svc_params)
+            base_estimator = Pipeline(steps=[("scaler", scaler), ("classifier", classifier)])
         else:
             raise ValueError(f"Unknown model: {model_cfg['name']}")
-        
-        # Get hyperparameter space
-        hpo_space = model_cfg.get("hpo_space", {})
-        
-        if hpo_space:
-            # Remove 'classifier__' prefix as we're not using Pipeline
-            clean_hpo_space = {k.replace('classifier__', ''): v for k, v in hpo_space.items()}
-            
-            # Perform hyperparameter optimization
-            search = RandomizedSearchCV(
-                base_model, 
-                clean_hpo_space, 
-                n_iter=self.config["settings"]["hpo_settings"]["n_iter"],
-                cv=self.config["settings"]["hpo_settings"]["cv_folds"], 
-                scoring="f1_macro", 
-                n_jobs=-1,
-                random_state=42,
-                verbose=0
-            )
-            
-            start_time = time.time()
-            search.fit(X_train, y_train)
-            train_time = time.time() - start_time
-            
-            if self.verbose:
-                print(f"    Best params: {search.best_params_}")
-                print(f"    Best CV score: {search.best_score_:.4f}")
-            
-            return search.best_estimator_, train_time
-        else:
-            # Train without HPO
-            start_time = time.time()
-            base_model.fit(X_train, y_train)
-            train_time = time.time() - start_time
-            return base_model, train_time
+
+        # Train without HPO
+        start_time = time.time()
+        base_estimator.fit(X_train, y_train)
+        train_time = time.time() - start_time
+        return base_estimator, train_time
 
     def train_dl_model(self, model_cfg, X_train, y_train, X_test, y_test):
         num_classes = len(np.unique(y_train))
