@@ -171,11 +171,11 @@ class ExperimentRunner:
         
 
         # Load or build features
-        X_train_feat, X_test_feat = self.load_or_build_feature(feature_cfg, X_train, X_test, y_train, feature_cfg=feature_cfg)
+        X_train_feat, X_test_feat = self.load_or_build_feature(feature_cfg, X_train, X_test, y_train)
 
         # Train model
         if model_cfg["name"] in ["multinomial_nb", "logistic_regression", "linear_svc"]:
-            model, train_time = self.train_sklearn_model(model_cfg, X_train_feat, y_train)
+            model, train_time = self.train_sklearn_model(model_cfg, X_train_feat, y_train, feature_cfg=feature_cfg)
         elif model_cfg["name"] in ["rnn", "lstm"]:
             model, train_time = self.train_dl_model(model_cfg, X_train_feat, y_train, X_test_feat, y_test)
         else:
