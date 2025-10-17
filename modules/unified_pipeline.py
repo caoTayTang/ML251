@@ -423,17 +423,11 @@ class ExperimentRunner:
         return X_train_seq, X_test_seq
 
     def train_sklearn_model(self, model_cfg, X_train, y_train, feature_cfg=None):
-        # Decide if we need a scaler (yes for LR and LinearSVC; no for MultinomialNB)
-        use_scaler = model_cfg["name"] in ["logistic_regression", "linear_svc"]
-        is_sparse = sp.issparse(X_train)
-        scaler = StandardScaler(with_mean=not is_sparse) if use_scaler else None
-
         # Create estimator (and pipeline when scaling is used)
         if model_cfg["name"] == "multinomial_nb":
             base_estimator = MultinomialNB()
         elif model_cfg["name"] == "logistic_regression":
-            classifier = LogisticRegression(max_iter=2000, random_state=42)
-            base_estimator = Pipeline(steps=[("scaler", scaler), ("classifier", classifier)])
+            base_estimator = LogisticRegression(max_iter=2000, random_state=42)
         elif model_cfg["name"] == "linear_svc":
             # Build feature key for dynamic config
             feat_key = None
@@ -459,8 +453,7 @@ class ExperimentRunner:
             if feat_key and feat_key in LINEAR_SVC_CONFIGS:
                 svc_params.update(LINEAR_SVC_CONFIGS[feat_key])
 
-            classifier = LinearSVC(random_state=42, **svc_params)
-            base_estimator = Pipeline(steps=[("scaler", scaler), ("classifier", classifier)])
+            base_estimator = LinearSVC(random_state=42, **svc_params)
         else:
             raise ValueError(f"Unknown model: {model_cfg['name']}")
 
