@@ -5,7 +5,7 @@ import gradio as gr
 import joblib
 
 from src.acoustic.dataset import FSDD
-from src.models.hmm import HMMTrainer
+from src.acoustic.hmm import HMMTrainer
 from src.constants import MODELS_CKPT
 
 
