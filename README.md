@@ -17,8 +17,8 @@ Repo này chứa **4 dự án lớn** trong khuôn khổ môn học *Học Máy 
 
 | Project | Domain | Status | Landing Page | Colab |
 |---------|--------|--------|------------------|-------|
-| **BTL1 – Spaceship Titanic** | Tabular Data (Kaggle Challenge) | ✅ Completed | [Tabular Data](https://caotaytang.github.io/ml251/tabular) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1NNmRjgSI6SE14mwKW55yWsWSvvfLDNwm) |
-| **BTL2 – Text Processing** | NLP / Text Data | 🔜 Upcoming | _TBD_ | ![Colab Badge](https://img.shields.io/badge/Colab-coming--soon-lightgrey?logo=googlecolab&logoColor=white) |
+| **BTL1 – Spaceship Titanic** | Tabular Data (Kaggle Challenge) | ✅ Completed | [Tabular Data](https://caotaytang.github.io/ML-251/tabular/) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1NNmRjgSI6SE14mwKW55yWsWSvvfLDNwm) |
+| **BTL2 – Text Processing** | NLP / Text Data | ✅ Completed | [Text Data](https://caotaytang.github.io/ML-251/text/) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1X4WtaY9Jf77zCHagV7b-N1B5IAxJKrjO?usp=sharing) |
 | **BTL3 – Image Recognition** | Computer Vision | 🔜 Upcoming | _TBD_ | ![Colab Badge](https://img.shields.io/badge/Colab-coming--soon-lightgrey?logo=googlecolab&logoColor=white) |
 | **Extension – Advanced Topics** | (HMM / Bayesian Network / Conditional Random Field) | 🔜 Upcoming | _TBD_ | ![Colab Badge](https://img.shields.io/badge/Colab-coming--soon-lightgrey?logo=googlecolab&logoColor=white) |
 

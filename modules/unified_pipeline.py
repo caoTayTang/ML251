@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import numpy as np
 import pandas as pd
@@ -18,127 +19,18 @@ from tensorflow.keras.layers import Embedding, LSTM, Dense, Bidirectional, Input
 from tensorflow.keras.callbacks import EarlyStopping
 from transformers import AutoTokenizer, AutoModel
 import torch
-
-# Export configuration
-EXPERIMENT_CONFIG = {
-    "settings": {
-        "use_cache": True,
-        "cache_path": "features",
-        "hpo_settings": {
-            "n_iter": 15,
-            "cv_folds": 3
-        }
-    },
-
-    # Các pipeline với sklearn models
-    "sklearn_pipelines": [
-        # --- BoW Unigram ---
-        {"feature_extractor": {"name": "bow", "params": {"ngram_range": (1, 1), "max_features": 20000},
-                               "precomputed": {"train_file": "features/bow_train_unigram.npz",
-                                               "test_file": "features/bow_test_unigram.npz"}},
-         "model": {"name": "multinomial_nb", "hpo_space": {"alpha": loguniform(1e-3, 1e0)}}},
-
-        {"feature_extractor": {"name": "bow", "params": {"ngram_range": (1, 1), "max_features": 20000},
-                               "precomputed": {"train_file": "features/bow_train_unigram.npz",
-                                               "test_file": "features/bow_test_unigram.npz"}},
-         "model": {"name": "logistic_regression", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                                "class_weight": [None, "balanced"]}}},
-
-        {"feature_extractor": {"name": "bow", "params": {"ngram_range": (1, 1), "max_features": 20000},
-                               "precomputed": {"train_file": "features/bow_train_unigram.npz",
-                                               "test_file": "features/bow_test_unigram.npz"}},
-         "model": {"name": "linear_svc", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                       "class_weight": [None, "balanced"]}}},
-
-        # --- BoW Bigram ---
-        {"feature_extractor": {"name": "bow", "params": {"ngram_range": (1, 2), "max_features": 30000},
-                               "precomputed": {"train_file": "features/bow_train_bigram.npz",
-                                               "test_file": "features/bow_test_bigram.npz"}},
-         "model": {"name": "logistic_regression", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                                "class_weight": [None, "balanced"]}}},
-
-        {"feature_extractor": {"name": "bow", "params": {"ngram_range": (1, 2), "max_features": 30000},
-                               "precomputed": {"train_file": "features/bow_train_bigram.npz",
-                                               "test_file": "features/bow_test_bigram.npz"}},
-         "model": {"name": "linear_svc", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                       "class_weight": [None, "balanced"]}}},
-
-        # --- TF-IDF Unigram ---
-        {"feature_extractor": {"name": "tfidf", "params": {"ngram_range": (1, 1), "max_features": 20000},
-                               "precomputed": {"train_file": "features/tfidf_train_unigram.npz",
-                                               "test_file": "features/tfidf_test_unigram.npz"}},
-         "model": {"name": "multinomial_nb", "hpo_space": {"alpha": loguniform(1e-3, 1e0)}}},
-
-        {"feature_extractor": {"name": "tfidf", "params": {"ngram_range": (1, 1), "max_features": 20000},
-                               "precomputed": {"train_file": "features/tfidf_train_unigram.npz",
-                                               "test_file": "features/tfidf_test_unigram.npz"}},
-         "model": {"name": "logistic_regression", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                                "class_weight": [None, "balanced"]}}},
-
-        {"feature_extractor": {"name": "tfidf", "params": {"ngram_range": (1, 1), "max_features": 20000},
-                               "precomputed": {"train_file": "features/tfidf_train_unigram.npz",
-                                               "test_file": "features/tfidf_test_unigram.npz"}},
-         "model": {"name": "linear_svc", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                       "class_weight": [None, "balanced"]}}},
-
-        # --- TF-IDF Bigram ---
-        {"feature_extractor": {"name": "tfidf", "params": {"ngram_range": (1, 2), "max_features": 30000},
-                               "precomputed": {"train_file": "features/tfidf_train_bigram.npz",
-                                               "test_file": "features/tfidf_test_bigram.npz"}},
-         "model": {"name": "multinomial_nb", "hpo_space": {"alpha": loguniform(1e-3, 1e0)}}},
-
-        {"feature_extractor": {"name": "tfidf", "params": {"ngram_range": (1, 2), "max_features": 30000},
-                               "precomputed": {"train_file": "features/tfidf_train_bigram.npz",
-                                               "test_file": "features/tfidf_test_bigram.npz"}},
-         "model": {"name": "logistic_regression", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                                "class_weight": [None, "balanced"]}}},
-
-        {"feature_extractor": {"name": "tfidf", "params": {"ngram_range": (1, 2), "max_features": 30000},
-                               "precomputed": {"train_file": "features/tfidf_train_bigram.npz",
-                                               "test_file": "features/tfidf_test_bigram.npz"}},
-         "model": {"name": "linear_svc", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                       "class_weight": [None, "balanced"]}}},
-
-        # --- GloVe Mean Pooling ---
-        {"feature_extractor": {"name": "glove_mean", "params": {"embedding_dim": 100},
-                               "precomputed": {"file": "features/glove.npz"}},
-         "model": {"name": "logistic_regression", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                                "class_weight": [None, "balanced"]}}},
-
-        {"feature_extractor": {"name": "glove_mean", "params": {"embedding_dim": 100},
-                               "precomputed": {"file": "features/glove.npz"}},
-         "model": {"name": "linear_svc", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                       "class_weight": [None, "balanced"]}}},
-
-        # --- BERT Static Embedding ---
-        {"feature_extractor": {"name": "bert_cls", "params": {"model_name": "distilbert-base-uncased"},
-                               "precomputed": {"file": "features/bert_static.npz"}},
-         "model": {"name": "logistic_regression", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                                "class_weight": [None, "balanced"]}}},
-
-        {"feature_extractor": {"name": "bert_cls", "params": {"model_name": "distilbert-base-uncased"},
-                               "precomputed": {"file": "features/bert_static.npz"}},
-         "model": {"name": "linear_svc", "hpo_space": {"C": loguniform(1e-2, 1e2),
-                                                       "class_weight": [None, "balanced"]}}}
-    ],
-
-    # Các pipeline với Deep Learning models
-    "dl_pipelines": [
-        {"feature_extractor": {"name": "bert_sequence", "params": {"model_name": "distilbert-base-uncased", "max_len": 200},
-                               "precomputed": {"file": "features/bert_static.npz"}},
-         "model": {"name": "rnn", "hpo_space": {"hidden_dim": [64, 128, 256],
-                                                "num_layers": [1, 2],
-                                                "dropout": [0.2, 0.5],
-                                                "lr": loguniform(1e-4, 1e-2)}}},
-
-        {"feature_extractor": {"name": "bert_sequence", "params": {"model_name": "distilbert-base-uncased", "max_len": 200},
-                               "precomputed": {"file": "features/bert_static.npz"}},
-         "model": {"name": "lstm", "hpo_space": {"hidden_dim": [64, 128, 256],
-                                                 "num_layers": [1, 2],
-                                                 "dropout": [0.2, 0.5],
-                                                 "lr": loguniform(1e-4, 1e-2)}}}
-    ]
-}
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.layers import Dropout, BatchNormalization, Dense, Bidirectional
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
+import tensorflow as tf
+from scipy.sparse import save_npz, load_npz
+from transformers import AutoTokenizer, AutoModel
+from sklearn.preprocessing import StandardScaler
+from transformers import AutoModelForSequenceClassification
+import torch.nn.functional as F
+import re
+from transformers import pipeline as hf_pipeline
 
 class ExperimentRunner:
     def __init__(self, config: dict, workdir: str = ".", save_models: bool = True, verbose: bool = True):
@@ -152,11 +44,84 @@ class ExperimentRunner:
 
     def run_all_experiments(self, X_train, y_train, X_test, y_test) -> pd.DataFrame:
         results = []
-        pipelines = self.config.get("sklearn_pipelines", []) + self.config.get("dl_pipelines", [])
-        
+        pipelines = (
+            self.config.get("sklearn_pipelines", [])
+            + self.config.get("dl_pipelines", [])
+            + self.config.get("finetune_pipelines", [])
+        )
+
         for idx, pipeline in enumerate(pipelines):
-            pipeline_id = f"pipeline_{idx}_{pipeline['feature_extractor']['name']}_{pipeline['model']['name']}"
+            # Enhanced pipeline_id generation with more details
+            feature_name = pipeline['feature_extractor']['name']
+            model_name = pipeline['model']['name']
             
+            # Add ngram info for bow/tfidf features
+            if feature_name in ['bow', 'tfidf']:
+                ngram_range = pipeline['feature_extractor']['params'].get('ngram_range', (1, 1))
+                if ngram_range == (1, 1):
+                    ngram_type = "unigram"
+                elif ngram_range == (1, 2):
+                    ngram_type = "bigram"
+                elif ngram_range == (1, 3):
+                    ngram_type = "trigram"
+                elif ngram_range == (2, 2):
+                    ngram_type = "bigram_only"
+                elif ngram_range == (3, 3):
+                    ngram_type = "trigram_only"
+                else:
+                    ngram_type = f"ngram_{ngram_range[0]}_{ngram_range[1]}"
+                
+                pipeline_id = f"pipeline_{idx}_{feature_name}_{ngram_type}_{model_name}"
+            else:
+                pipeline_id = f"pipeline_{idx}_{feature_name}_{model_name}"
+
+            # Check if it's a DL model with retrain=False
+            if pipeline['model']['name'] in ['rnn', 'lstm'] and not pipeline['model'].get('retrain', True):
+                # Load pre-existing results from CSV
+                result_path = os.path.join(self.workdir, pipeline['model']['result_path'])
+                if os.path.exists(result_path):
+                    pre_results_df = pd.read_csv(result_path)
+                    # Assuming the CSV has the same columns as our result dict
+                    # Add or update pipeline_id if needed
+                    pre_results_df['pipeline_id'] = pipeline_id
+                    results.extend(pre_results_df.to_dict('records'))
+                    
+                    if self.verbose:
+                        print(f"✓ Loaded pre-existing results for {pipeline_id} from {result_path}")
+                        print(f"  Loaded {len(pre_results_df)} results")
+                else:
+                    print(f"✗ Result file not found for {pipeline_id}: {result_path}")
+                continue
+
+            # Finetune: nếu retrain=False và đã có file kết quả -> chỉ load; nếu chưa có -> chạy inference và lưu
+            if pipeline['model']['name'] == 'finetune':
+                result_path = os.path.join(self.workdir, pipeline['model']['result_path'])
+                if (not pipeline['model'].get('retrain', True)) and os.path.exists(result_path):
+                    pre_results_df = pd.read_csv(result_path)
+                    pre_results_df['pipeline_id'] = pipeline_id
+                    results.extend(pre_results_df.to_dict('records'))
+                    if self.verbose:
+                        print(f"✓ Loaded pre-existing finetune results for {pipeline_id} from {result_path}")
+                        print(f"  Loaded {len(pre_results_df)} results")
+                    continue
+                # Nếu chưa có file kết quả, thực hiện inference và lưu
+                if self.verbose:
+                    print(f"\n{'='*60}")
+                    print(f"Running Pipeline {idx+1}/{len(pipelines)}: {pipeline_id}")
+                    print(f"{'='*60}")
+                try:
+                    result = self.run_finetune_pipeline(pipeline, X_test, y_test, pipeline_id)
+                    results.append(result)
+                    if self.verbose:
+                        print(f"✓ Finetune inference completed")
+                        print(f"  Test F1 Macro: {result['test_f1_macro']:.4f}")
+                        print(f"  Test Accuracy: {result['test_accuracy']:.4f}")
+                except Exception as e:
+                    print(f"✗ Finetune pipeline {pipeline_id} failed: {e}")
+                    if self.verbose:
+                        import traceback; traceback.print_exc()
+                continue
+
             if self.verbose:
                 print(f"\n{'='*60}")
                 print(f"Running Pipeline {idx+1}/{len(pipelines)}: {pipeline_id}")
@@ -178,7 +143,7 @@ class ExperimentRunner:
                     traceback.print_exc()
         
         final_results_df = pd.DataFrame(results).sort_values(by="test_f1_macro", ascending=False)
-        results_path = os.path.join(self.workdir, "results", "final_results.csv")
+        results_path = os.path.join(self.workdir, "BTL2/results", "final_results.csv")
         final_results_df.to_csv(results_path, index=False)
         
         if self.verbose:
@@ -192,6 +157,8 @@ class ExperimentRunner:
         start_time = time.time()
         feature_cfg = pipeline_config["feature_extractor"]
         model_cfg = pipeline_config["model"]
+
+        
 
         # Load or build features
         X_train_feat, X_test_feat = self.load_or_build_feature(feature_cfg, X_train, X_test, y_train)
@@ -211,7 +178,7 @@ class ExperimentRunner:
             y_pred = model.predict(X_test_feat)
         else:  # Deep learning models
             y_pred_proba = model.predict(X_test_feat)
-            y_pred = np.argmax(y_pred_proba, axis=-1) + 1
+            y_pred = np.argmax(y_pred_proba, axis=-1)
             
         inference_time = time.time() - inference_start
 
@@ -269,19 +236,6 @@ class ExperimentRunner:
                     X_train_feat = None
                     X_test_feat = None
                 
-                # Special handling for bert_sequence - need to transform to 3D
-                if X_train_feat is not None and feature_cfg["name"] == "bert_sequence" and "bert_static.npz" in precomputed["file"]:
-                    if self.verbose:
-                        print(f"    Transforming BERT features from {X_train_feat.shape} to sequence format")
-                    
-                    max_len = feature_cfg.get("params", {}).get("max_len", 200)
-                    # Transform from 2D (samples, 768) to 3D (samples, max_len, 768)
-                    X_train_feat = np.repeat(X_train_feat[:, np.newaxis, :], max_len, axis=1)
-                    X_test_feat = np.repeat(X_test_feat[:, np.newaxis, :], max_len, axis=1)
-                    
-                    if self.verbose:
-                        print(f"    Transformed to sequence: train {X_train_feat.shape}, test {X_test_feat.shape}")
-                
                 if X_train_feat is not None:
                     return X_train_feat, X_test_feat
             else:
@@ -316,8 +270,21 @@ class ExperimentRunner:
         X_train_mat = vectorizer.fit_transform(X_train_texts)
         X_test_mat = vectorizer.transform(X_test_texts)
         
-        # Save with proper naming
-        ngram_type = "unigram" if params.get("ngram_range") == (1, 1) else "bigram"
+        # Save with proper naming - handle all ngram types
+        ngram_range = params.get("ngram_range", (1, 1))
+        if ngram_range == (1, 1):
+            ngram_type = "unigram"
+        elif ngram_range == (1, 2):
+            ngram_type = "bigram"
+        elif ngram_range == (1, 3):
+            ngram_type = "trigram"
+        elif ngram_range == (2, 2):
+            ngram_type = "bigram_only"
+        elif ngram_range == (3, 3):
+            ngram_type = "trigram_only"
+        else:
+            ngram_type = f"ngram_{ngram_range[0]}_{ngram_range[1]}"
+        
         train_file = os.path.join(self.workdir, "features", f"{kind}_train_{ngram_type}.npz")
         test_file = os.path.join(self.workdir, "features", f"{kind}_test_{ngram_type}.npz")
         
@@ -450,9 +417,9 @@ class ExperimentRunner:
         if model_cfg["name"] == "multinomial_nb":
             base_model = MultinomialNB()
         elif model_cfg["name"] == "logistic_regression":
-            base_model = LogisticRegression(max_iter=1000, random_state=42)
+            base_model = LogisticRegression(max_iter=2000, random_state=42)
         elif model_cfg["name"] == "linear_svc":
-            base_model = LinearSVC(max_iter=2000, random_state=42)
+            base_model = LinearSVC(max_iter=10000, tol=1e-3, dual=True, random_state=42)
         else:
             raise ValueError(f"Unknown model: {model_cfg['name']}")
         
@@ -492,9 +459,6 @@ class ExperimentRunner:
             return base_model, train_time
 
     def train_dl_model(self, model_cfg, X_train, y_train, X_test, y_test):
-        from tensorflow.keras.utils import to_categorical
-        from tensorflow.keras.layers import Dropout
-        
         num_classes = len(np.unique(y_train))
         input_shape = X_train.shape[1:]
 
@@ -503,10 +467,10 @@ class ExperimentRunner:
             print(f"    X_train shape: {X_train.shape}")
             print(f"    Number of classes: {num_classes}")
         
-        # Convert labels to categorical if needed
-        y_train_cat = to_categorical(y_train - 1, num_classes)
-        y_test_cat = to_categorical(y_test - 1, num_classes)
-        
+        # Fix label encoding: labels 1-5 -> 0-4 for to_categorical
+        y_train_cat = to_categorical(y_train, num_classes)
+        y_test_cat = to_categorical(y_test, num_classes)
+
         # Sample hyperparameters from space - CONVERT TO PYTHON NATIVE TYPES
         hidden_dim = int(np.random.choice(model_cfg["hpo_space"]["hidden_dim"]))
         num_layers = int(np.random.choice(model_cfg["hpo_space"]["num_layers"]))
@@ -515,59 +479,155 @@ class ExperimentRunner:
         
         if self.verbose:
             print(f"    DL Hyperparameters: hidden_dim={hidden_dim}, layers={num_layers}, dropout={dropout_rate}, lr={lr:.5f}")
-            print(f"    Types: hidden_dim={type(hidden_dim)}, num_layers={type(num_layers)}")
         
-        # Build model
+        # Enhanced model architecture
         model = Sequential()
         model.add(Input(shape=input_shape))
         
-        # Add RNN or LSTM layers
+        # Add Bidirectional RNN/LSTM layers for better context understanding
         for i in range(num_layers):
-            return_sequences = (i < num_layers - 1)  # Only last layer returns single output
+            return_sequences = (i < num_layers - 1)
             
             if model_cfg["name"] == "rnn":
-                model.add(SimpleRNN(hidden_dim, return_sequences=return_sequences))
+                # Use Bidirectional RNN for better sequence modeling
+                model.add(Bidirectional(SimpleRNN(hidden_dim, return_sequences=return_sequences)))
             elif model_cfg["name"] == "lstm":
-                model.add(LSTM(hidden_dim, return_sequences=return_sequences))
+                # Use Bidirectional LSTM for better sequence modeling
+                model.add(Bidirectional(LSTM(hidden_dim, return_sequences=return_sequences)))
 
-            # Add dropout after each RNN/LSTM layer
+            # Add BatchNormalization for training stability
+            if not return_sequences:  # Only after last layer
+                model.add(BatchNormalization())
+            
+            # Add dropout for regularization
             if dropout_rate > 0:
                 model.add(Dropout(dropout_rate))
         
-        # Add output layer
+        # Add dense layers for better feature learning
+        model.add(Dense(hidden_dim, activation='relu'))
+        model.add(BatchNormalization())
+        model.add(Dropout(dropout_rate))
+        
+        # Additional dense layer for complex pattern learning
+        model.add(Dense(hidden_dim // 2, activation='relu'))
+        model.add(BatchNormalization())
+        model.add(Dropout(dropout_rate * 0.5))  # Reduced dropout in final layers
+        
+        # Output layer
         model.add(Dense(num_classes, activation="softmax"))
         
-        # Compile model
-        from tensorflow.keras.optimizers import Adam
+        # Compile with improved optimizer settings
         model.compile(
-            optimizer=Adam(learning_rate=lr),
+            optimizer=Adam(
+                learning_rate=lr,
+                beta_1=0.9,
+                beta_2=0.999,
+                epsilon=1e-8,
+                clipnorm=1.0  # Gradient clipping to prevent exploding gradients
+            ),
             loss="categorical_crossentropy",
             metrics=["accuracy"]
         )
         
         if self.verbose:
-            print("    Model summary:")
+            print("    Enhanced Model Architecture:")
             model.summary()
         
-        # Train model
-        early_stopping = EarlyStopping(monitor="val_loss", patience=3, restore_best_weights=True, verbose=0)
+        # Enhanced training with better callbacks
+        early_stopping = EarlyStopping(
+            monitor="val_accuracy",  # Monitor accuracy instead of loss
+            patience=7,  # Increased patience
+            restore_best_weights=True,
+            verbose=0,
+            mode='max'
+        )
+        
+        reduce_lr = ReduceLROnPlateau(
+            monitor='val_loss',
+            factor=0.5,
+            patience=3,
+            min_lr=1e-7,
+            verbose=0
+        )
         
         start_time = time.time()
         history = model.fit(
             X_train, y_train_cat,
             validation_data=(X_test, y_test_cat),
-            epochs=20,
-            batch_size=32,
-            callbacks=[early_stopping],
-            verbose=0
+            epochs=50,  # Increased epochs
+            batch_size=16,  # Smaller batch size for better convergence
+            callbacks=[early_stopping, reduce_lr],
+            verbose=0,
+            shuffle=True  # Shuffle data each epoch
         )
         train_time = time.time() - start_time
         
         if self.verbose:
             print(f"    Trained for {len(history.history['loss'])} epochs")
             print(f"    Final val_accuracy: {history.history['val_accuracy'][-1]:.4f}")
+            print(f"    Best val_accuracy: {max(history.history['val_accuracy']):.4f}")
+            print(f"    Final learning rate: {model.optimizer.learning_rate.numpy():.2e}")
         
         return model, train_time
+    
+    def run_finetune_pipeline(self, pipeline_config, X_test_texts, y_test, pipeline_id):
+        feature_cfg = pipeline_config["feature_extractor"]
+        model_cfg = pipeline_config["model"]
+        params = feature_cfg.get("params", {})
+        max_len = int(params.get("max_len", 128))
+        # Ưu tiên checkpoint_path trong model_cfg; nếu không có, fallback model_name
+        ckpt_rel = model_cfg.get("checkpoint_path") or params.get("model_name")
+        ckpt_path = ckpt_rel if os.path.isabs(ckpt_rel) else os.path.join(self.workdir, ckpt_rel)
+        result_path = os.path.join(self.workdir, model_cfg["result_path"])
+
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        if self.verbose:
+            print(f"  Loading finetuned model from: {ckpt_path} (device: {device})")
+
+        # Dùng transformers.pipeline để inference đơn giản
+        classifier = hf_pipeline(
+            "text-classification",
+            model=ckpt_path,
+            tokenizer=ckpt_path,
+            device=device,
+            truncation=True,
+            padding="max_length",
+            max_length=max_len
+        )
+        texts = list(X_test_texts)
+        start_inf = time.time()
+        predictions = classifier(texts)
+        inference_time = time.time() - start_inf
+
+        # Parse nhãn dạng 'LABEL_0'/'label_3' -> 0..N
+        def to_int_label(label_str: str) -> int:
+            m = re.search(r'(\d+)$', str(label_str))
+            return int(m.group(1)) if m else 0
+        y_pred = np.array([to_int_label(p["label"]) for p in predictions], dtype=int)
+
+        metrics = {
+            "test_f1_macro": f1_score(y_test, y_pred, average="macro"),
+            "test_accuracy": accuracy_score(y_test, y_pred),
+            "test_precision_macro": precision_score(y_test, y_pred, average="macro", zero_division=0),
+            "test_recall_macro": recall_score(y_test, y_pred, average="macro", zero_division=0),
+        }
+
+        # Lưu kết quả 1 dòng ra CSV theo yêu cầu
+        row = {
+            "pipeline_id": pipeline_id,
+            "feature_extractor_name": feature_cfg["name"],
+            "model_name": model_cfg["name"],
+            "train_time_s": None,          # để trống
+            "inference_time_s": inference_time,
+            "total_time_s": None,          # để trống
+            "model_artifact_path": ckpt_path,
+            **metrics,
+        }
+        os.makedirs(os.path.dirname(result_path), exist_ok=True)
+        pd.DataFrame([row]).to_csv(result_path, index=False)
+        if self.verbose:
+            print(f"  Saved finetune results to: {result_path}")
+        return row
 
 if __name__ == "__main__":
     print("Unified Pipeline Module Loaded.")
