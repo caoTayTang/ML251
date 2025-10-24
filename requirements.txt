@@ -6,8 +6,8 @@ xgboost
 numpy
 ipykernel
 scipy
-hmmlearn
 
+# hmmlearn
 # Make sure to have CUDA on your machine
 # pytorch-tabnet
 # torch 
