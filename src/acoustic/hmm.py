@@ -62,6 +62,7 @@ class HMMTrainer:
             scores = {label: model.score(feat) for label, model in self.models.items()}
             pred = max(scores, key=scores.get)
             y_pred.append(pred)
-        acc = accuracy_score(y_test, y_pred)
-        print(f"[RESULT] Accuracy: {acc*100:.2f}%")
-        return acc
+        return y_pred
+        # acc = accuracy_score(y_test, y_pred)
+        # print(f"[RESULT] Accuracy: {acc*100:.2f}%")
+        # return acc
