@@ -39,10 +39,16 @@ class ImageDataset(Dataset):
         self.transform = transform
         self.image_paths = []
         self.labels = []
-        self.categories = []
+        self.categories = [
+            "buildings",
+            "forest",
+            "glacier",
+            "mountain",
+            "sea",
+            "street",
+        ]
 
-        for label in os.listdir(dataset_path):
-            self.categories.append(label)
+        for label in self.categories:
             label_path = os.path.join(dataset_path, label)
             if os.path.isdir(label_path):
                 for image_file in os.listdir(label_path):
@@ -773,7 +779,59 @@ if __name__ == "__main__":
     #         f">>>>>{key}: Accuracy = {value['acc']:.4f}, F1-macro = {value['f1']:.4f}, Train Time = {value['train_time']:.4f}s, Inference Time = {value['inference_time']:.4f}s"
     #     )
     #     print(" -> ".join([str(e) for e in value["pipeline"]]))
-    checkpoint_path = os.path.join(".", "ckpt", "image_ckpt")
+    # checkpoint_path = "."
+    # dl_configs = {
+    #     "config 1": {"resize_size": 224, "batch_size": 32, "model_name": "resnet18"},
+    #     "config 2": {
+    #         "resize_size": 224,
+    #         "batch_size": 32,
+    #         "model_name": "efficientnet_b0",
+    #     },
+    #     "config 3": {
+    #         "resize_size": 224,
+    #         "batch_size": 32,
+    #         "model_name": "mobilenet_v3_large",
+    #     },
+    #     "config 4": {"resize_size": 224, "batch_size": 32, "model_name": "vit_b_16"},
+    # }
+    # dl_results = []
+    # print("\n----- Bắt đầu Mục 5.2: Thực thi pipeline Deep Learning -----")
+    # for idx, (name, config) in enumerate(dl_configs.items()):
+    #     print("============================================================")
+    #     print(f"Running Deep Learning Pipeline {idx + 1}")
+    #     print(config)
+    #     print("============================================================")
+    #     runner = DLPipelineRunner(root=".", ckpt_path=checkpoint_path, config=config)
+    #     inference_time, acc, f1, precision, recall = runner.run_experiment()
+    #     dl_results.append(
+    #         {
+    #             "pipeline": str(config),
+    #             "inference_time": inference_time,
+    #             "acc": acc,
+    #             "f1": f1,
+    #             "precision": precision,
+    #             "recall": recall,
+    #         }
+    #     )
+    # import pandas as pd
+
+    # dl_df = pd.DataFrame(dl_results)
+    # print("\n----- TẤT CẢ CÁC THỬ NGHIỆM HỌC SÂU ĐÃ HOÀN TẤT! -----")
+    # print("Bảng kết quả tổng hợp:")
+    # print(dl_df)
+
+    # Train
+    # config = {
+    #     "batch_size": 32,
+    #     "resize_size": 224,
+    #     "learning_rate": 1e-3,
+    #     "num_epochs": 100,
+    #     "model_name": "vit_b_16",
+    #     "is_load_model": False,
+    # }
+    # runner = DLPipelineRunner(".", config)
+    # runner.train()
+
     dl_configs = {
         "config 1": {"resize_size": 224, "batch_size": 32, "model_name": "resnet18"},
         "config 2": {
@@ -788,6 +846,7 @@ if __name__ == "__main__":
         },
         "config 4": {"resize_size": 224, "batch_size": 32, "model_name": "vit_b_16"},
     }
+    checkpoint_path = "."
     dl_results = []
     print("\n----- Bắt đầu Mục 5.2: Thực thi pipeline Deep Learning -----")
     for idx, (name, config) in enumerate(dl_configs.items()):
@@ -807,21 +866,7 @@ if __name__ == "__main__":
                 "recall": recall,
             }
         )
-    import pandas as pd
-
     dl_df = pd.DataFrame(dl_results)
     print("\n----- TẤT CẢ CÁC THỬ NGHIỆM HỌC SÂU ĐÃ HOÀN TẤT! -----")
     print("Bảng kết quả tổng hợp:")
-    print(dl_df)
-
-    # Train
-    # config = {
-    #     "batch_size": 32,
-    #     "resize_size": 224,
-    #     "learning_rate": 1e-3,
-    #     "num_epochs": 100,
-    #     "model_name": "vit_b_16",
-    #     "is_load_model": False,
-    # }
-    # runner = DLPipelineRunner(".", config)
-    # runner.train()
+    # display(dl_df)
