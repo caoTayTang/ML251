@@ -325,11 +325,12 @@ class TranditionalPipelineRunner:
         train_loader,
         test_loader,
         use_feature_file=True,  # Extract Again. Let's set False :>
-        feature_dir="features/image_features",
+        feature_path="./features/image_features",
+        label_path="./labels",
     ):
-        feature_dir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", feature_dir)
-        )
+        # feature_dir = os.path.abspath(
+        #     os.path.join(os.path.dirname(__file__), "..", feature_dir)
+        # )
         print(
             f" >>>>> Start the Experiment with the following Pipeline <<<<<\n {self.__repr__()}",
             flush=True,
@@ -337,19 +338,15 @@ class TranditionalPipelineRunner:
 
         feature_name = self.pipeline[0].name.lower()
         train_feature_file = os.path.join(
-            feature_dir, f"features_train_{feature_name}.npy"
+            feature_path, f"features_train_{feature_name}.npy"
         )
         test_feature_file = os.path.join(
-            feature_dir, f"features_test_{feature_name}.npy"
+            feature_path, f"features_test_{feature_name}.npy"
         )
-        label_dir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "../labels")
-        )
-
-        train_label_file = os.path.join(label_dir, f"labels_train_{feature_name}.npy")
-        test_label_file = os.path.join(label_dir, f"labels_test_{feature_name}.npy")
-        os.makedirs(feature_dir, exist_ok=True)
-        os.makedirs(label_dir, exist_ok=True)
+        train_label_file = os.path.join(label_path, f"labels_train_{feature_name}.npy")
+        test_label_file = os.path.join(label_path, f"labels_test_{feature_name}.npy")
+        os.makedirs(feature_path, exist_ok=True)
+        os.makedirs(label_path, exist_ok=True)
 
         # ---------------------------------------------------------
         # - Step 1: extract feature/Load feature extracted        -
@@ -377,7 +374,7 @@ class TranditionalPipelineRunner:
             np.save(test_feature_file, x_test)
             np.save(train_label_file, y_train)
             np.save(test_label_file, y_test)
-            print(f"Features saved to {feature_dir} and labels saved to {label_dir}")
+            print(f"Features saved to {feature_path} and labels saved to {label_dir}")
         # ---------------------------------------------------------
         # - Step 2: Scaling Features                              -
         # ---------------------------------------------------------
@@ -421,13 +418,13 @@ class TranditionalPipelineRunner:
 
 
 class DLPipelineRunner:
-    def __init__(self, root, config: dict):
+    def __init__(self, root, ckpt_path, config: dict):
         self.config = config
         self.TRAIN_PATH = os.path.join(
             root, "data", "image_data", "seg_train/seg_train"
         )
         self.TEST_PATH = os.path.join(root, "data", "image_data", "seg_test/seg_test")
-        self.ckpt = os.path.join(root, "ckpt", "image_ckpt")
+        self.ckpt = ckpt_path
 
     def run_experiment(self):
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -670,83 +667,90 @@ class DLPipelineRunner:
 
 
 if __name__ == "__main__":
-    # RESIZE = (224, 224)  # Resize Image Input
-    # transform = Compose(
-    #     [
-    #         Resize(RESIZE),
-    #         ToTensor(),
-    #         Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    #     ]
-    # )
-    # # Path
-    # image_data_path = os.path.abspath(
-    #     os.path.join(os.path.dirname(__file__), "..", "data", "image_data")
-    # )
-    # train_path = os.path.join(image_data_path, "seg_train", "seg_train")
-    # test_path = os.path.join(image_data_path, "seg_test", "seg_test")
-    # # Dataset and DataLoader
-    # train_dataset = ImageDataset(train_path, transform=transform)
-    # test_dataset = ImageDataset(test_path, transform=transform)
-    # train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-    # test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+    root = os.getcwd()
+    feature_path = os.path.join(root, "features", "image_features")
+    label_path = os.path.join(root, "labels")
+    RESIZE = (224, 224)  # Resize Image Input
+    transform = Compose(
+        [
+            Resize(RESIZE),
+            ToTensor(),
+            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
+    # Path
+    image_data_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "data", "image_data")
+    )
+    train_path = os.path.join(image_data_path, "seg_train", "seg_train")
+    test_path = os.path.join(image_data_path, "seg_test", "seg_test")
+    # Dataset and DataLoader
+    train_dataset = ImageDataset(train_path, transform=transform)
+    test_dataset = ImageDataset(test_path, transform=transform)
+    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 
-    # configs_list = [
-    #     [
-    #         ComponentConfig("HOG", {"resize_size": 224}),
-    #         ComponentConfig("standard", {}),
-    #         ComponentConfig("PCA", {"n_components": 100}),
-    #         ComponentConfig("logistic", {"max_iter": 1000}),
-    #     ],
-    #     [
-    #         ComponentConfig("SIFT", {"kmeans_clusters": 100}),
-    #         ComponentConfig("standard", {}),
-    #         ComponentConfig("PCA", {"n_components": 50}),
-    #         ComponentConfig("svm", {"kernel": "rbf"}),
-    #     ],
-    #     [
-    #         ComponentConfig("resnet", {"resize_size": 224}),
-    #         ComponentConfig("minmax", {"feature_range": (0, 1)}),
-    #         ComponentConfig("PCA", {"n_components": 100}),
-    #         ComponentConfig("random", {"n_estimators": 100}),
-    #     ],
-    #     [
-    #         ComponentConfig("efficientnet", {"resize_size": 224}),
-    #         ComponentConfig("robust", {}),
-    #         ComponentConfig("PCA", {"n_components": 100}),
-    #         ComponentConfig("xgboost", {"n_estimators": 100}),
-    #     ],
-    #     [
-    #         ComponentConfig("vgg", {"resize_size": 224}),
-    #         ComponentConfig("standard", {}),
-    #         ComponentConfig("PCA", {"n_components": 100}),
-    #         ComponentConfig("logistic", {}),
-    #     ],
-    #     [
-    #         ComponentConfig("ViT", {"resize_size": 224}),
-    #         ComponentConfig("standard", {}),
-    #         ComponentConfig("PCA", {"n_components": 100}),
-    #         ComponentConfig("svm", {"kernel": "rbf"}),
-    #     ],
-    # ]
+    configs_list = [
+        [
+            ComponentConfig("HOG", {"resize_size": 224}),
+            ComponentConfig("standard", {}),
+            ComponentConfig("PCA", {"n_components": 100}),
+            ComponentConfig("logistic", {"max_iter": 1000}),
+        ],
+        [
+            ComponentConfig("SIFT", {"kmeans_clusters": 100}),
+            ComponentConfig("standard", {}),
+            ComponentConfig("PCA", {"n_components": 50}),
+            ComponentConfig("svm", {"kernel": "rbf"}),
+        ],
+        [
+            ComponentConfig("resnet", {"resize_size": 224}),
+            ComponentConfig("minmax", {"feature_range": (0, 1)}),
+            ComponentConfig("PCA", {"n_components": 100}),
+            ComponentConfig("random", {"n_estimators": 100}),
+        ],
+        [
+            ComponentConfig("efficientnet", {"resize_size": 224}),
+            ComponentConfig("robust", {}),
+            ComponentConfig("PCA", {"n_components": 100}),
+            ComponentConfig("xgboost", {"n_estimators": 100}),
+        ],
+        [
+            ComponentConfig("vgg", {"resize_size": 224}),
+            ComponentConfig("standard", {}),
+            ComponentConfig("PCA", {"n_components": 100}),
+            ComponentConfig("logistic", {}),
+        ],
+        [
+            ComponentConfig("ViT", {"resize_size": 224}),
+            ComponentConfig("standard", {}),
+            ComponentConfig("PCA", {"n_components": 100}),
+            ComponentConfig("svm", {"kernel": "rbf"}),
+        ],
+    ]
 
-    # results = {}
-    # for idx, configs in enumerate(configs_list):
-    #     print("\n==========================")
-    #     print(f"=== Running Pipeline {idx + 1} ===")
-    #     print("==========================")
-    #     runner = TranditionalPipelineRunner(configs)
-    #     train_time, inference_time, acc, f1, precision, recall = runner.run_experiment(
-    #         train_loader, test_loader, True
-    #     )
-    #     results[f"pipeline_{idx + 1}"] = {
-    #         "pipeline": configs,
-    #         "train_time": train_time,
-    #         "inference_time": inference_time,
-    #         "acc": acc,
-    #         "f1": f1,
-    #         "precision": precision,
-    #         "recall": recall,
-    #     }
+    results = {}
+    for idx, configs in enumerate(configs_list):
+        print("\n==========================")
+        print(f"=== Running Pipeline {idx + 1} ===")
+        print("==========================")
+        runner = TranditionalPipelineRunner(configs)
+        train_time, inference_time, acc, f1, precision, recall = runner.run_experiment(
+            train_loader,
+            test_loader,
+            True,
+            feature_path=feature_path,
+            label_path=label_path,
+        )
+        results[f"pipeline_{idx + 1}"] = {
+            "pipeline": configs,
+            "train_time": train_time,
+            "inference_time": inference_time,
+            "acc": acc,
+            "f1": f1,
+            "precision": precision,
+            "recall": recall,
+        }
     #     # To export result csv file, let uncomment this
     #     # csv_file = f"experiment_results_pipeline_{idx + 1}.csv"
     #     # with open(csv_file, mode="w", newline="") as file:
@@ -762,29 +766,29 @@ if __name__ == "__main__":
     #         f">>>>>{key}: Accuracy = {value['acc']:.4f}, F1-macro = {value['f1']:.4f}, Train Time = {value['train_time']:.4f}s, Inference Time = {value['inference_time']:.4f}s"
     #     )
     #     print(" -> ".join([str(e) for e in value["pipeline"]]))
-
-    configs = {
-        #     "config 1": {"resize_size": 224, "batch_size": 32, "model_name": "resnet18"},
-        #     "config 2": {
-        #         "resize_size": 224,
-        #         "batch_size": 32,
-        #         "model_name": "efficientnet_b0",
-        #     },
-        #     "config 3": {
-        #         "resize_size": 224,
-        #         "batch_size": 32,
-        #         "model_name": "mobilenet_v3_large",
-        #     },
-        "config 4": {"resize_size": 224, "batch_size": 32, "model_name": "vit_b_16"},
-    }
-    num_config = len(configs)
-    for idx, (name, config) in enumerate(configs.items()):
-        print("============================================================")
-        print(f"Running Deep Learning Pipeline {idx + 1}/{num_config}:")
-        print(config)
-        print("============================================================")
-        runner = DLPipelineRunner(".", config=config)
-        runner.run_experiment()
+    # ckpt_path = os.path.join(".", "ckpt", "image_ckpt")
+    # configs = {
+    #     "config 1": {"resize_size": 224, "batch_size": 32, "model_name": "resnet18"},
+    #     "config 2": {
+    #         "resize_size": 224,
+    #         "batch_size": 32,
+    #         "model_name": "efficientnet_b0",
+    #     },
+    #     "config 3": {
+    #         "resize_size": 224,
+    #         "batch_size": 32,
+    #         "model_name": "mobilenet_v3_large",
+    #     },
+    #     "config 4": {"resize_size": 224, "batch_size": 32, "model_name": "vit_b_16"},
+    # }
+    # num_config = len(configs)
+    # for idx, (name, config) in enumerate(configs.items()):
+    #     print("============================================================")
+    #     print(f"Running Deep Learning Pipeline {idx + 1}/{num_config}:")
+    #     print(config)
+    #     print("============================================================")
+    #     runner = DLPipelineRunner(".", ckpt_path=ckpt_path, config=config)
+    #     runner.run_experiment()
 
     # Train
     # config = {
