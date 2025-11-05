@@ -466,7 +466,8 @@ class DLPipelineRunner:
             model.heads.head = nn.Linear(in_features, class_nums)
         else:
             raise ValueError(f"Unknown Model in this pipeline: {MODEL_NAME}")
-        self.load_checkpoint(model, optimizer=None, name_model=MODEL_NAME, is_best=True)
+        # self.load_checkpoint(model, optimizer=None, name_model=MODEL_NAME, is_best=True)
+        self.load_model_state(model, MODEL_NAME)
         model.to(device)
         # Metric
         precision_metric = Precision(
@@ -501,7 +502,7 @@ class DLPipelineRunner:
         f1_score = f1_score_metric.compute().cpu().item()
         print("*****Result*****")
         print(
-            f"Accuracy {accuracy:.4f} - Precision {precision:.4f} - Recall {recall:.4f} - F1_score {f1_score}"
+            f"Accuracy {accuracy:.4f} - Precision {precision:.4f} - Recall {recall:.4f} - F1_score {f1_score:.4f}"
         )
         print(f"Inference time: {inference_time:.4f}s")
         return inference_time, accuracy, f1_score, precision, recall
@@ -665,6 +666,12 @@ class DLPipelineRunner:
             optimizer.load_state_dict(checkpoint["optimizer"])
         return checkpoint["epoch"], checkpoint["best_metric"]
 
+    def load_model_state(self, model, name_model):
+        file_name = "best_" + name_model + ".pt"
+        print("=> Load model state ...")
+        model_state_path = os.path.join(self.ckpt, file_name)
+        model.load_state_dict(torch.load(model_state_path))
+
 
 if __name__ == "__main__":
     # root = os.getcwd()
@@ -805,7 +812,7 @@ if __name__ == "__main__":
     dl_df = pd.DataFrame(dl_results)
     print("\n----- TẤT CẢ CÁC THỬ NGHIỆM HỌC SÂU ĐÃ HOÀN TẤT! -----")
     print("Bảng kết quả tổng hợp:")
-    print(dl_results)
+    print(dl_df)
 
     # Train
     # config = {
