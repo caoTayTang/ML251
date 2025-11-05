@@ -495,10 +495,10 @@ class DLPipelineRunner:
                 f1_score_metric.update(pred, label)
                 progress_bar.set_description("Evaluating val dataset ...")
         inference_time = time.time() - start_time
-        accuracy = accuracy_metric.compute()
-        precision = precision_metric.compute()
-        recall = recall_metric.compute()
-        f1_score = f1_score_metric.compute()
+        accuracy = accuracy_metric.compute().cpu().item()
+        precision = precision_metric.compute().cpu().item()
+        recall = recall_metric.compute().cpu().item()
+        f1_score = f1_score_metric.compute().cpu().item()
         print("*****Result*****")
         print(
             f"Accuracy {accuracy:.4f} - Precision {precision:.4f} - Recall {recall:.4f} - F1_score {f1_score}"
@@ -667,90 +667,90 @@ class DLPipelineRunner:
 
 
 if __name__ == "__main__":
-    root = os.getcwd()
-    feature_path = os.path.join(root, "features", "image_features")
-    label_path = os.path.join(root, "labels")
-    RESIZE = (224, 224)  # Resize Image Input
-    transform = Compose(
-        [
-            Resize(RESIZE),
-            ToTensor(),
-            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ]
-    )
-    # Path
-    image_data_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "data", "image_data")
-    )
-    train_path = os.path.join(image_data_path, "seg_train", "seg_train")
-    test_path = os.path.join(image_data_path, "seg_test", "seg_test")
-    # Dataset and DataLoader
-    train_dataset = ImageDataset(train_path, transform=transform)
-    test_dataset = ImageDataset(test_path, transform=transform)
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+    # root = os.getcwd()
+    # feature_path = os.path.join(root, "features", "image_features")
+    # label_path = os.path.join(root, "labels")
+    # RESIZE = (224, 224)  # Resize Image Input
+    # transform = Compose(
+    #     [
+    #         Resize(RESIZE),
+    #         ToTensor(),
+    #         Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    #     ]
+    # )
+    # # Path
+    # image_data_path = os.path.abspath(
+    #     os.path.join(os.path.dirname(__file__), "..", "data", "image_data")
+    # )
+    # train_path = os.path.join(image_data_path, "seg_train", "seg_train")
+    # test_path = os.path.join(image_data_path, "seg_test", "seg_test")
+    # # Dataset and DataLoader
+    # train_dataset = ImageDataset(train_path, transform=transform)
+    # test_dataset = ImageDataset(test_path, transform=transform)
+    # train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    # test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 
-    configs_list = [
-        [
-            ComponentConfig("HOG", {"resize_size": 224}),
-            ComponentConfig("standard", {}),
-            ComponentConfig("PCA", {"n_components": 100}),
-            ComponentConfig("logistic", {"max_iter": 1000}),
-        ],
-        [
-            ComponentConfig("SIFT", {"kmeans_clusters": 100}),
-            ComponentConfig("standard", {}),
-            ComponentConfig("PCA", {"n_components": 50}),
-            ComponentConfig("svm", {"kernel": "rbf"}),
-        ],
-        [
-            ComponentConfig("resnet", {"resize_size": 224}),
-            ComponentConfig("minmax", {"feature_range": (0, 1)}),
-            ComponentConfig("PCA", {"n_components": 100}),
-            ComponentConfig("random", {"n_estimators": 100}),
-        ],
-        [
-            ComponentConfig("efficientnet", {"resize_size": 224}),
-            ComponentConfig("robust", {}),
-            ComponentConfig("PCA", {"n_components": 100}),
-            ComponentConfig("xgboost", {"n_estimators": 100}),
-        ],
-        [
-            ComponentConfig("vgg", {"resize_size": 224}),
-            ComponentConfig("standard", {}),
-            ComponentConfig("PCA", {"n_components": 100}),
-            ComponentConfig("logistic", {}),
-        ],
-        [
-            ComponentConfig("ViT", {"resize_size": 224}),
-            ComponentConfig("standard", {}),
-            ComponentConfig("PCA", {"n_components": 100}),
-            ComponentConfig("svm", {"kernel": "rbf"}),
-        ],
-    ]
+    # configs_list = [
+    #     [
+    #         ComponentConfig("HOG", {"resize_size": 224}),
+    #         ComponentConfig("standard", {}),
+    #         ComponentConfig("PCA", {"n_components": 100}),
+    #         ComponentConfig("logistic", {"max_iter": 1000}),
+    #     ],
+    #     [
+    #         ComponentConfig("SIFT", {"kmeans_clusters": 100}),
+    #         ComponentConfig("standard", {}),
+    #         ComponentConfig("PCA", {"n_components": 50}),
+    #         ComponentConfig("svm", {"kernel": "rbf"}),
+    #     ],
+    #     [
+    #         ComponentConfig("resnet", {"resize_size": 224}),
+    #         ComponentConfig("minmax", {"feature_range": (0, 1)}),
+    #         ComponentConfig("PCA", {"n_components": 100}),
+    #         ComponentConfig("random", {"n_estimators": 100}),
+    #     ],
+    #     [
+    #         ComponentConfig("efficientnet", {"resize_size": 224}),
+    #         ComponentConfig("robust", {}),
+    #         ComponentConfig("PCA", {"n_components": 100}),
+    #         ComponentConfig("xgboost", {"n_estimators": 100}),
+    #     ],
+    #     [
+    #         ComponentConfig("vgg", {"resize_size": 224}),
+    #         ComponentConfig("standard", {}),
+    #         ComponentConfig("PCA", {"n_components": 100}),
+    #         ComponentConfig("logistic", {}),
+    #     ],
+    #     [
+    #         ComponentConfig("ViT", {"resize_size": 224}),
+    #         ComponentConfig("standard", {}),
+    #         ComponentConfig("PCA", {"n_components": 100}),
+    #         ComponentConfig("svm", {"kernel": "rbf"}),
+    #     ],
+    # ]
 
-    results = {}
-    for idx, configs in enumerate(configs_list):
-        print("\n==========================")
-        print(f"=== Running Pipeline {idx + 1} ===")
-        print("==========================")
-        runner = TranditionalPipelineRunner(configs)
-        train_time, inference_time, acc, f1, precision, recall = runner.run_experiment(
-            train_loader,
-            test_loader,
-            True,
-            feature_path=feature_path,
-            label_path=label_path,
-        )
-        results[f"pipeline_{idx + 1}"] = {
-            "pipeline": configs,
-            "train_time": train_time,
-            "inference_time": inference_time,
-            "acc": acc,
-            "f1": f1,
-            "precision": precision,
-            "recall": recall,
-        }
+    # results = {}
+    # for idx, configs in enumerate(configs_list):
+    #     print("\n==========================")
+    #     print(f"=== Running Pipeline {idx + 1} ===")
+    #     print("==========================")
+    #     runner = TranditionalPipelineRunner(configs)
+    #     train_time, inference_time, acc, f1, precision, recall = runner.run_experiment(
+    #         train_loader,
+    #         test_loader,
+    #         True,
+    #         feature_path=feature_path,
+    #         label_path=label_path,
+    #     )
+    #     results[f"pipeline_{idx + 1}"] = {
+    #         "pipeline": configs,
+    #         "train_time": train_time,
+    #         "inference_time": inference_time,
+    #         "acc": acc,
+    #         "f1": f1,
+    #         "precision": precision,
+    #         "recall": recall,
+    #     }
     #     # To export result csv file, let uncomment this
     #     # csv_file = f"experiment_results_pipeline_{idx + 1}.csv"
     #     # with open(csv_file, mode="w", newline="") as file:
@@ -766,29 +766,46 @@ if __name__ == "__main__":
     #         f">>>>>{key}: Accuracy = {value['acc']:.4f}, F1-macro = {value['f1']:.4f}, Train Time = {value['train_time']:.4f}s, Inference Time = {value['inference_time']:.4f}s"
     #     )
     #     print(" -> ".join([str(e) for e in value["pipeline"]]))
-    # ckpt_path = os.path.join(".", "ckpt", "image_ckpt")
-    # configs = {
-    #     "config 1": {"resize_size": 224, "batch_size": 32, "model_name": "resnet18"},
-    #     "config 2": {
-    #         "resize_size": 224,
-    #         "batch_size": 32,
-    #         "model_name": "efficientnet_b0",
-    #     },
-    #     "config 3": {
-    #         "resize_size": 224,
-    #         "batch_size": 32,
-    #         "model_name": "mobilenet_v3_large",
-    #     },
-    #     "config 4": {"resize_size": 224, "batch_size": 32, "model_name": "vit_b_16"},
-    # }
-    # num_config = len(configs)
-    # for idx, (name, config) in enumerate(configs.items()):
-    #     print("============================================================")
-    #     print(f"Running Deep Learning Pipeline {idx + 1}/{num_config}:")
-    #     print(config)
-    #     print("============================================================")
-    #     runner = DLPipelineRunner(".", ckpt_path=ckpt_path, config=config)
-    #     runner.run_experiment()
+    checkpoint_path = os.path.join(".", "ckpt", "image_ckpt")
+    dl_configs = {
+        "config 1": {"resize_size": 224, "batch_size": 32, "model_name": "resnet18"},
+        "config 2": {
+            "resize_size": 224,
+            "batch_size": 32,
+            "model_name": "efficientnet_b0",
+        },
+        "config 3": {
+            "resize_size": 224,
+            "batch_size": 32,
+            "model_name": "mobilenet_v3_large",
+        },
+        "config 4": {"resize_size": 224, "batch_size": 32, "model_name": "vit_b_16"},
+    }
+    dl_results = []
+    print("\n----- Bắt đầu Mục 5.2: Thực thi pipeline Deep Learning -----")
+    for idx, (name, config) in enumerate(dl_configs.items()):
+        print("============================================================")
+        print(f"Running Deep Learning Pipeline {idx + 1}")
+        print(config)
+        print("============================================================")
+        runner = DLPipelineRunner(root=".", ckpt_path=checkpoint_path, config=config)
+        inference_time, acc, f1, precision, recall = runner.run_experiment()
+        dl_results.append(
+            {
+                "pipeline": str(config),
+                "inference_time": inference_time,
+                "acc": acc,
+                "f1": f1,
+                "precision": precision,
+                "recall": recall,
+            }
+        )
+    import pandas as pd
+
+    dl_df = pd.DataFrame(dl_results)
+    print("\n----- TẤT CẢ CÁC THỬ NGHIỆM HỌC SÂU ĐÃ HOÀN TẤT! -----")
+    print("Bảng kết quả tổng hợp:")
+    print(dl_results)
 
     # Train
     # config = {
