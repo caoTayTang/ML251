@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.optim as optim
 import torchvision.models as models
 import xgboost as xgb
 from PIL import Image
@@ -19,8 +20,13 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
 from sklearn.svm import SVC
 from torch.utils.data import DataLoader, Dataset
+from torchmetrics import Accuracy, F1Score, Precision, Recall
 from torchvision.transforms import Compose, Normalize, Resize, ToTensor
 from tqdm.autonotebook import tqdm
+from torchvision import models
+from torch.utils.tensorboard import SummaryWriter
+
+torch.multiprocessing.set_sharing_strategy("file_system")
 
 
 class ImageDataset(Dataset):
@@ -311,6 +317,9 @@ class TranditionalPipelineRunner:
         self.pca = ComponentFactory.create_PCA(configs[2].name, configs[2].params)
         self.model = ComponentFactory.create_model(configs[3].name, configs[3].params)
 
+    def __repr__(self):
+        return "Pipeline(" + "->".join(self.pipeline[i].name for i in range(4)) + ")"
+
     def run_experiment(
         self,
         train_loader,
@@ -322,7 +331,7 @@ class TranditionalPipelineRunner:
             os.path.join(os.path.dirname(__file__), "..", feature_dir)
         )
         print(
-            f" >>>>> Start the Experiment with the following Pipeline <<<<<\n {self.pipeline}",
+            f" >>>>> Start the Experiment with the following Pipeline <<<<<\n {self.__repr__()}",
             flush=True,
         )
 
@@ -402,7 +411,7 @@ class TranditionalPipelineRunner:
         f1 = f1_score(y_test, y_pred, average="macro")
         precision = precision_score(y_test, y_pred, average="macro")
         recall = recall_score(y_test, y_pred, average="macro")
-
+        print("*****Result*****")
         print(
             f"Accuracy: {acc:.4f}, F1-macro: {f1:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}"
         )
@@ -411,94 +420,380 @@ class TranditionalPipelineRunner:
         return train_time, inference_time, acc, f1, precision, recall
 
 
-if __name__ == "__main__":
-    RESIZE = (224, 224)  # Resize Image Input
-    transform = Compose(
-        [
-            Resize(RESIZE),
-            ToTensor(),
-            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ]
-    )
-    # Path
-    image_data_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "data", "image_data")
-    )
-    train_path = os.path.join(image_data_path, "seg_train", "seg_train")
-    test_path = os.path.join(image_data_path, "seg_test", "seg_test")
-    # Dataset and DataLoader
-    train_dataset = ImageDataset(train_path, transform=transform)
-    test_dataset = ImageDataset(test_path, transform=transform)
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
-
-    configs_list = [
-        [
-            ComponentConfig("HOG", {"resize_size": 224}),
-            ComponentConfig("standard", {}),
-            ComponentConfig("PCA", {"n_components": 100}),
-            ComponentConfig("logistic", {"max_iter": 1000}),
-        ],
-        [
-            ComponentConfig("SIFT", {"kmeans_clusters": 100}),
-            ComponentConfig("standard", {}),
-            ComponentConfig("PCA", {"n_components": 50}),
-            ComponentConfig("svm", {"kernel": "rbf"}),
-        ],
-        [
-            ComponentConfig("resnet", {"resize_size": 224}),
-            ComponentConfig("minmax", {"feature_range": (0, 1)}),
-            ComponentConfig("PCA", {"n_components": 100}),
-            ComponentConfig("random", {"n_estimators": 100}),
-        ],
-        [
-            ComponentConfig("efficientnet", {"resize_size": 224}),
-            ComponentConfig("robust", {}),
-            ComponentConfig("PCA", {"n_components": 100}),
-            ComponentConfig("xgboost", {"n_estimators": 100}),
-        ],
-        [
-            ComponentConfig("vgg", {"resize_size": 224}),
-            ComponentConfig("standard", {}),
-            ComponentConfig("PCA", {"n_components": 100}),
-            ComponentConfig("logistic", {}),
-        ],
-        [
-            ComponentConfig("ViT", {"resize_size": 224}),
-            ComponentConfig("standard", {}),
-            ComponentConfig("PCA", {"n_components": 100}),
-            ComponentConfig("svm", {"kernel": "rbf"}),
-        ],
-    ]
-
-    results = {}
-    for idx, configs in enumerate(configs_list):
-        print(f"\n=== Running Pipeline {idx + 1} ===")
-        runner = TranditionalPipelineRunner(configs)
-        train_time, inference_time, acc, f1, precision, recall = runner.run_experiment(
-            train_loader, test_loader, True
+class DLPipelineRunner:
+    def __init__(self, root, config: dict):
+        self.config = config
+        self.TRAIN_PATH = os.path.join(
+            root, "data", "image_data", "seg_train/seg_train"
         )
-        results[f"pipeline_{idx + 1}"] = {
-            "pipeline": configs,
-            "train_time": train_time,
-            "inference_time": inference_time,
-            "acc": acc,
-            "f1": f1,
-            "precision": precision,
-            "recall": recall,
-        }
-        # To export result csv file, let uncomment this
-        # csv_file = f"experiment_results_pipeline_{idx + 1}.csv"
-        # with open(csv_file, mode="w", newline="") as file:
-        #     writer = csv.DictWriter(
-        #         file, fieldnames=results[f"Config_{idx + 1}"].keys()
-        #     )
-        #     writer.writeheader()
-        #     writer.writerow(results[f"Config_{idx + 1}"])
+        self.TEST_PATH = os.path.join(root, "data", "image_data", "seg_test/seg_test")
+        self.ckpt = os.path.join(root, "ckpt", "image_ckpt")
 
-    print("\n=== Results ===")
-    for key, value in results.items():
+    def run_experiment(self):
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        RESIZE_SIZE = self.config.get("resize_size", 224)
+        BATCH_SIZE = self.config.get("batch_size", 32)
+
+        transforms = Compose(
+            [
+                Resize((RESIZE_SIZE, RESIZE_SIZE)),
+                ToTensor(),
+                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]
+        )
+        # Dataset
+        val_dataset = ImageDataset(self.TEST_PATH, transform=transforms)
+        val_dataloader = DataLoader(val_dataset, batch_size=BATCH_SIZE, num_workers=4)
+        class_nums = len(val_dataset.categories)
+        # Model
+        MODEL_NAME = self.config.get("model_name", "")
+
+        if MODEL_NAME == "resnet18":
+            model = models.resnet18(weights=models.ResNet18_Weights)
+            in_features = model.fc.in_features
+            model.fc = nn.Linear(in_features, class_nums)
+
+        elif MODEL_NAME == "efficientnet_b0":
+            model = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights)
+            in_features = model.classifier[1].in_features
+            model.classifier[1] = nn.Linear(in_features, class_nums)
+        elif MODEL_NAME == "mobilenet_v3_large":
+            model = models.mobilenet_v3_large(
+                weights=models.MobileNet_V3_Large_Weights.IMAGENET1K_V2
+            )
+            in_features = model.classifier[3].in_features
+            model.classifier[3] = nn.Linear(in_features, class_nums)
+        elif MODEL_NAME == "vit_b_16":
+            model = models.vit_b_16(weights=models.ViT_B_16_Weights.IMAGENET1K_V1)
+            in_features = model.heads.head.in_features
+            model.heads.head = nn.Linear(in_features, class_nums)
+        else:
+            raise ValueError(f"Unknown Model in this pipeline: {MODEL_NAME}")
+        self.load_checkpoint(model, optimizer=None, name_model=MODEL_NAME, is_best=True)
+        model.to(device)
+        # Metric
+        precision_metric = Precision(
+            task="multiclass", average="weighted", num_classes=class_nums
+        ).to(device)
+        recall_metric = Recall(
+            task="multiclass", average="weighted", num_classes=class_nums
+        ).to(device)
+        f1_score_metric = F1Score(
+            task="multiclass", average="weighted", num_classes=class_nums
+        ).to(device)
+        accuracy_metric = Accuracy(task="multiclass", num_classes=class_nums).to(device)
+        # Evaluation
+        model.eval()
+        progress_bar = tqdm(val_dataloader, colour="cyan", leave=True)
+        start_time = time.time()
+        with torch.inference_mode():
+            for image, label in progress_bar:
+                image = image.to(device)
+                label = torch.tensor(label, dtype=torch.int64).to(device)
+                output = model(image)
+                pred = torch.argmax(output, dim=-1)
+                accuracy_metric.update(pred, label)
+                precision_metric.update(pred, label)
+                recall_metric.update(pred, label)
+                f1_score_metric.update(pred, label)
+                progress_bar.set_description("Evaluating val dataset ...")
+        inference_time = time.time() - start_time
+        accuracy = accuracy_metric.compute()
+        precision = precision_metric.compute()
+        recall = recall_metric.compute()
+        f1_score = f1_score_metric.compute()
+        print("*****Result*****")
         print(
-            f">>>>>{key}: Accuracy = {value['acc']:.4f}, F1-macro = {value['f1']:.4f}, Train Time = {value['train_time']:.4f}s, Inference Time = {value['inference_time']:.4f}s"
+            f"Accuracy {accuracy:.4f} - Precision {precision:.4f} - Recall {recall:.4f} - F1_score {f1_score}"
         )
-        print(" -> ".join([str(e) for e in value["pipeline"]]))
+        print(f"Inference time: {inference_time:.4f}s")
+        return inference_time, accuracy, f1_score, precision, recall
+
+    def train(self):
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        batch_size = self.config.get("batch_size", 32)
+        resize_size = self.config.get("resize_size", 224)
+        lr = self.config.get("learning_rate", 1e-3)
+        num_epochs = self.config.get("num_epochs", 100)
+        transforms = Compose(
+            [
+                Resize((resize_size, resize_size)),
+                ToTensor(),
+                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]
+        )
+        train_dataset = ImageDataset(self.TRAIN_PATH, transform=transforms)
+        val_dataset = ImageDataset(self.TEST_PATH, transform=transforms)
+
+        train_dataloader = DataLoader(
+            train_dataset, batch_size=batch_size, shuffle=True, num_workers=4
+        )
+        val_dataloader = DataLoader(val_dataset, batch_size=batch_size, num_workers=4)
+        class_nums = len(train_dataset.categories)
+        MODEL_NAME = self.config.get("model_name", "")
+        if MODEL_NAME == "resnet18":
+            model = models.resnet18(weights=models.ResNet18_Weights)
+            in_features = model.fc.in_features
+            model.fc = nn.Linear(in_features, class_nums)
+
+        elif MODEL_NAME == "efficientnet_b0":
+            model = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights)
+            in_features = model.classifier[1].in_features
+            model.classifier[1] = nn.Linear(in_features, class_nums)
+        elif MODEL_NAME == "mobilenet_v3_large":
+            model = models.mobilenet_v3_large(
+                weights=models.MobileNet_V3_Large_Weights.IMAGENET1K_V2
+            )
+            in_features = model.classifier[3].in_features
+            model.classifier[3] = nn.Linear(in_features, class_nums)
+        elif MODEL_NAME == "vit_b_16":
+            model = models.vit_b_16(weights=models.ViT_B_16_Weights.IMAGENET1K_V1)
+            for param in model.parameters():
+                param.requires_grad = False
+            in_features = model.heads.head.in_features
+            model.heads.head = nn.Linear(in_features, class_nums)
+        else:
+            raise ValueError(f"Unknown Model in this pipeline: {MODEL_NAME}")
+        criterion = nn.CrossEntropyLoss()
+        # Metric
+        precision_metric = Precision(
+            task="multiclass", average="weighted", num_classes=class_nums
+        ).to(device)
+        recall_metric = Recall(
+            task="multiclass", average="weighted", num_classes=class_nums
+        ).to(device)
+        f1_score_metric = F1Score(
+            task="multiclass", average="weighted", num_classes=class_nums
+        ).to(device)
+        accuracy_metric = Accuracy(task="multiclass", num_classes=class_nums).to(device)
+        optimizer = optim.Adam(model.parameters(), lr=lr)
+        if self.config.get("is_load_model", False):
+            start_epoch, best_metric = self.load_checkpoint(
+                model, optimizer, MODEL_NAME
+            )
+        else:
+            start_epoch, best_metric = 0, 0
+        model.to(device)
+        writer = SummaryWriter(f"run/{MODEL_NAME}")
+        params_table = "| Parameter | Value |\n|---|---|\n"
+        for key, value in self.config.items():
+            params_table += f"| {key} | {value} |\n"
+        writer.add_text("Hyperparameters", params_table)
+        global_step = start_epoch * len(train_dataloader)
+        for epoch in range(start_epoch, num_epochs):
+            model.train()
+            train_loss = []
+            progress_bar = tqdm(train_dataloader, colour="cyan", leave=True)
+            for i, (image, label) in enumerate(progress_bar):
+                image = image.to(device)
+                output = model(image)
+                label = torch.tensor(label, dtype=torch.int64).to(device)
+                loss = criterion(output, label)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                train_loss.append(loss.item())
+                mean_loss = np.mean(train_loss)
+                writer.add_scalar("Train/loss", mean_loss, global_step=global_step)
+                progress_bar.set_description(
+                    f"(Train) Epoch {epoch}/{num_epochs} - Mean Loss {mean_loss:.4f}"
+                )
+                global_step += 1
+            model.eval()
+            progress_bar = tqdm(val_dataloader, colour="cyan", leave=True)
+            with torch.inference_mode():
+                for image, label in progress_bar:
+                    image = image.to(device)
+                    label = torch.tensor(label, dtype=torch.int64).to(device)
+                    output = model(image)
+                    pred = torch.argmax(output, dim=-1)
+                    accuracy_metric.update(pred, label)
+                    precision_metric.update(pred, label)
+                    recall_metric.update(pred, label)
+                    f1_score_metric.update(pred, label)
+
+                    # num_accuracy += torch.eq(label, pred).sum()
+                    progress_bar.set_description(
+                        f"(Evaluation) - Accuracy {accuracy_metric.compute().item():.4f} - Precision {precision_metric.compute().item(): .4f} - Recall {recall_metric.compute().item():.4f} - F1 Score {f1_score_metric.compute().item():.4f}"
+                    )
+
+            accuracy = accuracy_metric.compute()
+            precision = precision_metric.compute()
+            recall = recall_metric.compute()
+            f1_score = f1_score_metric.compute()
+            writer.add_scalar("Val/Accuracy", accuracy, global_step=epoch)
+            writer.add_scalar("Val/Precision", precision, global_step=epoch)
+            writer.add_scalar("Val/Recall", recall, global_step=epoch)
+            writer.add_scalar("Val/F1 Score", f1_score, global_step=epoch)
+            accuracy_metric.reset()
+            precision_metric.reset()
+            recall_metric.reset()
+            f1_score_metric.reset()
+            if best_metric < accuracy.item():
+                best_metric = accuracy.item()
+                self.save_checkpoint(
+                    model, optimizer, epoch, best_metric, MODEL_NAME, best=True
+                )
+
+            self.save_checkpoint(model, optimizer, epoch, best_metric, MODEL_NAME)
+
+    def save_checkpoint(
+        self, model, optimizer, epoch, best_metric, name_model, best=False
+    ):
+        print("=> Save checkpoint ...")
+        if best:
+            extension = "best"
+        else:
+            extension = "last"
+        file_name = f"{extension}_{name_model}.pt.tar"
+        ckpt_path = os.path.join(self.ckpt, file_name)
+        checkpoint = {
+            "model": model.state_dict(),
+            "optimizer": optimizer.state_dict(),
+            "epoch": epoch,
+            "best_metric": best_metric,
+        }
+        torch.save(checkpoint, ckpt_path)
+
+    def load_checkpoint(self, model, optimizer, name_model, is_best=False):
+        print("=> Load checkpoint ...")
+        if is_best:
+            file_name = f"best_{name_model}.pt.tar"
+        else:
+            file_name = f"last_{name_model}.pt.tar"
+        ckpt_path = os.path.join(self.ckpt, file_name)
+        checkpoint = torch.load(ckpt_path, map_location="cpu")
+        model.load_state_dict(checkpoint["model"])
+        if optimizer:
+            optimizer.load_state_dict(checkpoint["optimizer"])
+        return checkpoint["epoch"], checkpoint["best_metric"]
+
+
+if __name__ == "__main__":
+    # RESIZE = (224, 224)  # Resize Image Input
+    # transform = Compose(
+    #     [
+    #         Resize(RESIZE),
+    #         ToTensor(),
+    #         Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    #     ]
+    # )
+    # # Path
+    # image_data_path = os.path.abspath(
+    #     os.path.join(os.path.dirname(__file__), "..", "data", "image_data")
+    # )
+    # train_path = os.path.join(image_data_path, "seg_train", "seg_train")
+    # test_path = os.path.join(image_data_path, "seg_test", "seg_test")
+    # # Dataset and DataLoader
+    # train_dataset = ImageDataset(train_path, transform=transform)
+    # test_dataset = ImageDataset(test_path, transform=transform)
+    # train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    # test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+
+    # configs_list = [
+    #     [
+    #         ComponentConfig("HOG", {"resize_size": 224}),
+    #         ComponentConfig("standard", {}),
+    #         ComponentConfig("PCA", {"n_components": 100}),
+    #         ComponentConfig("logistic", {"max_iter": 1000}),
+    #     ],
+    #     [
+    #         ComponentConfig("SIFT", {"kmeans_clusters": 100}),
+    #         ComponentConfig("standard", {}),
+    #         ComponentConfig("PCA", {"n_components": 50}),
+    #         ComponentConfig("svm", {"kernel": "rbf"}),
+    #     ],
+    #     [
+    #         ComponentConfig("resnet", {"resize_size": 224}),
+    #         ComponentConfig("minmax", {"feature_range": (0, 1)}),
+    #         ComponentConfig("PCA", {"n_components": 100}),
+    #         ComponentConfig("random", {"n_estimators": 100}),
+    #     ],
+    #     [
+    #         ComponentConfig("efficientnet", {"resize_size": 224}),
+    #         ComponentConfig("robust", {}),
+    #         ComponentConfig("PCA", {"n_components": 100}),
+    #         ComponentConfig("xgboost", {"n_estimators": 100}),
+    #     ],
+    #     [
+    #         ComponentConfig("vgg", {"resize_size": 224}),
+    #         ComponentConfig("standard", {}),
+    #         ComponentConfig("PCA", {"n_components": 100}),
+    #         ComponentConfig("logistic", {}),
+    #     ],
+    #     [
+    #         ComponentConfig("ViT", {"resize_size": 224}),
+    #         ComponentConfig("standard", {}),
+    #         ComponentConfig("PCA", {"n_components": 100}),
+    #         ComponentConfig("svm", {"kernel": "rbf"}),
+    #     ],
+    # ]
+
+    # results = {}
+    # for idx, configs in enumerate(configs_list):
+    #     print("\n==========================")
+    #     print(f"=== Running Pipeline {idx + 1} ===")
+    #     print("==========================")
+    #     runner = TranditionalPipelineRunner(configs)
+    #     train_time, inference_time, acc, f1, precision, recall = runner.run_experiment(
+    #         train_loader, test_loader, True
+    #     )
+    #     results[f"pipeline_{idx + 1}"] = {
+    #         "pipeline": configs,
+    #         "train_time": train_time,
+    #         "inference_time": inference_time,
+    #         "acc": acc,
+    #         "f1": f1,
+    #         "precision": precision,
+    #         "recall": recall,
+    #     }
+    #     # To export result csv file, let uncomment this
+    #     # csv_file = f"experiment_results_pipeline_{idx + 1}.csv"
+    #     # with open(csv_file, mode="w", newline="") as file:
+    #     #     writer = csv.DictWriter(
+    #     #         file, fieldnames=results[f"Config_{idx + 1}"].keys()
+    #     #     )
+    #     #     writer.writeheader()
+    #     #     writer.writerow(results[f"Config_{idx + 1}"])
+
+    # print("\n=== Results ===")
+    # for key, value in results.items():
+    #     print(
+    #         f">>>>>{key}: Accuracy = {value['acc']:.4f}, F1-macro = {value['f1']:.4f}, Train Time = {value['train_time']:.4f}s, Inference Time = {value['inference_time']:.4f}s"
+    #     )
+    #     print(" -> ".join([str(e) for e in value["pipeline"]]))
+
+    configs = {
+        #     "config 1": {"resize_size": 224, "batch_size": 32, "model_name": "resnet18"},
+        #     "config 2": {
+        #         "resize_size": 224,
+        #         "batch_size": 32,
+        #         "model_name": "efficientnet_b0",
+        #     },
+        #     "config 3": {
+        #         "resize_size": 224,
+        #         "batch_size": 32,
+        #         "model_name": "mobilenet_v3_large",
+        #     },
+        "config 4": {"resize_size": 224, "batch_size": 32, "model_name": "vit_b_16"},
+    }
+    num_config = len(configs)
+    for idx, (name, config) in enumerate(configs.items()):
+        print("============================================================")
+        print(f"Running Deep Learning Pipeline {idx + 1}/{num_config}:")
+        print(config)
+        print("============================================================")
+        runner = DLPipelineRunner(".", config=config)
+        runner.run_experiment()
+
+    # Train
+    # config = {
+    #     "batch_size": 32,
+    #     "resize_size": 224,
+    #     "learning_rate": 1e-3,
+    #     "num_epochs": 100,
+    #     "model_name": "vit_b_16",
+    #     "is_load_model": False,
+    # }
+    # runner = DLPipelineRunner(".", config)
+    # runner.train()
