@@ -635,9 +635,7 @@ class DLPipelineRunner:
             f1_score_metric.reset()
             if best_metric < accuracy.item():
                 best_metric = accuracy.item()
-                self.save_checkpoint(
-                    model, optimizer, epoch, best_metric, MODEL_NAME, best=True
-                )
+                torch.save(model.state_dict(), "best_" + MODEL_NAME + ".pt")
 
             self.save_checkpoint(model, optimizer, epoch, best_metric, MODEL_NAME)
 
