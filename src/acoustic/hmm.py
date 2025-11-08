@@ -52,7 +52,7 @@ class HMMTrainer:
         joblib.dump(self.models, self.model_path)
         print(f"[INFO] Models saved to {self.model_path}")
 
-    def evaluate(self, X_test, y_test):
+    def predict(self, X_test, y_test):
         """
         Evaluate HMM models on test set.
         Returns accuracy score.
