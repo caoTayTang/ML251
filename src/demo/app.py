@@ -2,6 +2,8 @@ import os
 import librosa
 import numpy as np
 import gradio as gr
+import matplotlib.pyplot as plt
+import io
 import joblib
 
 from src.acoustic.dataset import FSDD
@@ -37,6 +39,13 @@ def predict(file_obj):
     scores = {label: model.score(mfcc) for label, model in models.items()}
     pred_idx = max(scores, key=scores.get)
     pred_label = dataset.idx_to_label[pred_idx]
+
+    fig, ax = plt.subplots()
+    librosa.display.specshow(mfcc.T, sr=dataset.sr, hop_length=80, x_axis='time')
+    plt.title("MFCCs")
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
 
     return f"Predicted Digit: {pred_label}"
 
