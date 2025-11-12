@@ -13,7 +13,10 @@ from src.constants import MODELS_CKPT
 # Feature extraction for new audio
 # -------------------
 def extract_features(file_path, n_mfcc, sr):
-    y, _ = librosa.load(file_path, sr=sr)
+    y, orig_sr = librosa.load(file_path, sr=sr)
+    y = librosa.resample(y, orig_sr=orig_sr, target_sr=sr)
+    # Trim silence (giảm frame thừa)
+    y, _ = librosa.effects.trim(y, top_db=20)
     mfcc = librosa.feature.mfcc(
         y=y, sr=sr, n_mfcc=n_mfcc,
         n_fft=256, hop_length=80

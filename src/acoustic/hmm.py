@@ -2,6 +2,8 @@ import os
 # from hmmlearn import hmm
 import numpy as np
 import joblib
+from joblib import Parallel, delayed
+
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 
@@ -52,17 +54,31 @@ class HMMTrainer:
         joblib.dump(self.models, self.model_path)
         print(f"[INFO] Models saved to {self.model_path}")
 
+    # def evaluate(self, X_test, y_test):
+    #     """
+    #     Evaluate HMM models on test set.
+    #     Returns accuracy score.
+    #     """
+    #     y_pred = []
+    #     for feat in X_test:
+    #         scores = {label: model.score(feat) for label, model in self.models.items()}
+    #         pred = max(scores, key=scores.get)
+    #         y_pred.append(pred)
+    #     return y_pred
+    #     # acc = accuracy_score(y_test, y_pred)
+    #     # print(f"[RESULT] Accuracy: {acc*100:.2f}%")
+    #     # return acc
+
     def evaluate(self, X_test, y_test):
         """
         Evaluate HMM models on test set.
         Returns accuracy score.
         """
-        y_pred = []
-        for feat in X_test:
+        def score_one(feat):
             scores = {label: model.score(feat) for label, model in self.models.items()}
-            pred = max(scores, key=scores.get)
-            y_pred.append(pred)
+            return max(scores, key=scores.get)
+
+        y_pred = Parallel(n_jobs=-1, prefer="threads")(
+            delayed(score_one)(feat) for feat in X_test
+        )
         return y_pred
-        # acc = accuracy_score(y_test, y_pred)
-        # print(f"[RESULT] Accuracy: {acc*100:.2f}%")
-        # return acc
